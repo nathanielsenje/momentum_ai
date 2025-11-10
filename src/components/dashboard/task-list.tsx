@@ -66,11 +66,6 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
     return task.energyLevel === filter && !task.completed;
   });
 
-  const completedTasks = tasks.filter(task => task.completed).sort((a, b) => {
-      if (!a.completedAt || !b.completedAt) return 0;
-      return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
-  });
-
   return (
     <Card className="h-full">
       <CardHeader>
@@ -129,7 +124,7 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                                 <label htmlFor={`task-${task.id}`} className={cn("font-medium text-sm", task.completed && "line-through text-muted-foreground")}>
                                     {task.name}
                                 </label>
-                                <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                                <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground mt-1">
                                     <Badge variant="secondary" className="capitalize">{getCategoryName(task.category)}</Badge>
                                     <div className="flex items-center gap-1">
                                         <Icon className="size-3" />
@@ -180,27 +175,6 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
             ) : (
                 <div className="text-center text-sm text-muted-foreground py-8">
                     <p>All tasks for this filter are complete. Well done!</p>
-                </div>
-            )}
-            {completedTasks.length > 0 && (
-                <div className="pt-4">
-                    <h3 className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Completed</h3>
-                    <div className="space-y-1">
-                         {completedTasks.map(task => (
-                             <div key={task.id} className="flex items-center gap-3">
-                                <Checkbox
-                                    id={`task-${task.id}`}
-                                    checked={task.completed}
-                                    onCheckedChange={(checked) => handleComplete(task.id, !!checked)}
-                                    disabled={isPending}
-                                    className="mt-1"
-                                />
-                                <label htmlFor={`task-${task.id}`} className="flex-grow text-xs text-muted-foreground line-through">
-                                    {task.name}
-                                </label>
-                            </div>
-                         ))}
-                    </div>
                 </div>
             )}
         </div>
