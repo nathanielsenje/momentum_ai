@@ -21,5 +21,19 @@
     "completed": true,
     "completedAt": "2025-11-10T08:49:56.015Z",
     "createdAt": "2025-11-10T08:42:32.914Z"
+  },
+  {
+    "name": "fdgdfgsfgsf",
+    "category": "learning",
+    "energyLevel": "Low",
+    "projectId": "2",
+    "deadline": "2025-11-24T21:00:00.000Z",
+    "effort": 2,
+    "focusType": "Physical",
+    "priority": "Not Urgent & Not Important",
+    "id": "1762769291609",
+    "completed": false,
+    "completedAt": null,
+    "createdAt": "2025-11-10T10:08:11.609Z"
   }
 ]
