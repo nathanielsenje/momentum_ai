@@ -89,24 +89,26 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="mt-auto flex items-center gap-2">
-             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                >
-                  <Settings />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="right" align="end">
-                <DropdownMenuItem onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
-                   {theme === 'light' ? <Moon /> : <Sun />}
-                  <span>Toggle Theme</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <SidebarTrigger className="hidden md:flex" />
+        <SidebarFooter className="mt-auto">
+             <div className="flex items-center gap-2">
+                <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                    variant="ghost"
+                    size="icon"
+                    >
+                    <Settings />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="end">
+                    <DropdownMenuItem onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+                    {theme === 'light' ? <Moon /> : <Sun />}
+                    <span>Toggle Theme</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+                </DropdownMenu>
+                <SidebarTrigger className="ml-auto hidden md:flex" />
+            </div>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="p-4 md:p-6 lg:p-8 flex flex-col gap-4">
