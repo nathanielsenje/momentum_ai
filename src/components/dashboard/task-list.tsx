@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AddTaskDialog } from './add-task-dialog';
-import type { Task, Category, EnergyLevel, EnergyLog, Project } from '@/lib/types';
+import type { Task, Category, EnergyLevel, EnergyLog, Project, EisenhowerMatrix } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Zap, ZapOff, BatteryMedium, Target, ListTodo, Folder, PlayCircle, Shield, Edit } from 'lucide-react';
 import {
@@ -30,6 +30,13 @@ const energyIcons: Record<EnergyLevel, React.ElementType> = {
   Medium: BatteryMedium,
   High: Zap,
 };
+
+const priorityColors: Record<EisenhowerMatrix, string> = {
+    'Urgent & Important': 'text-red-500',
+    'Important & Not Urgent': 'text-amber-500',
+    'Urgent & Not Important': 'text-blue-500',
+    'Not Urgent & Not Important': 'text-gray-500',
+}
 
 interface TaskListProps {
     tasks: Task[];
@@ -108,6 +115,8 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                     const isAligned = todayEnergy?.level === task.energyLevel;
                     const projectName = task.projectId ? getProjectName(task.projectId) : null;
                     const isFocused = focusedTaskId === task.id;
+                    const priorityColor = task.priority ? priorityColors[task.priority] : 'text-gray-500';
+
                     return (
                         <div key={task.id} className={cn(
                             "flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors relative group",
@@ -122,10 +131,10 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                                 className="mt-1"
                             />
                             <div className="flex-grow">
-                                <label htmlFor={`task-${task.id}`} className={cn("font-medium text-sm", task.completed && "line-through text-muted-foreground")}>
+                                <label htmlFor={`task-${task.id}`} className={cn("font-semibold text-sm", task.completed && "line-through text-muted-foreground")}>
                                     {task.name}
                                 </label>
-                                <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground mt-1">
+                                <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-1">
                                     <Badge variant="secondary" className="capitalize">{getCategoryName(task.category)}</Badge>
                                     <div className="flex items-center gap-1">
                                         <Icon className="size-3" />
@@ -138,10 +147,15 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                                         </div>
                                     )}
                                     {task.priority && (
-                                        <div className="flex items-center gap-1">
-                                            <Shield className="size-3" />
-                                            <span>{task.priority}</span>
-                                        </div>
+                                        <Tooltip>
+                                            <TooltipTrigger className="flex items-center gap-1">
+                                                <Shield className={cn("size-3", priorityColor)} />
+                                                <span>{task.priority}</span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{task.priority}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
                                     )}
                                 </div>
                                  {todayEnergy && !task.completed && (
