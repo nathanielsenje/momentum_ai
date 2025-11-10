@@ -56,22 +56,25 @@ const calculateDailyMomentumScoreFlow = ai.defineFlow(
     outputSchema: CalculateDailyMomentumScoreOutputSchema,
   },
   async input => {
-    //Simple scoring logic, tasks completed at the right energy level are worth 100 points, tasks not at the right energy level are worth -50 points
-    let score = 0;
-    for (const task of input.completedTasks) {
-      if (task.energyLevel === input.energyLevel) {
-        score += 100;
-      } else {
-        score -= 50;
-      }
+    
+    const { completedTasks, energyLevel, streakBonus } = input;
+    const totalTasks = completedTasks.length;
+
+    if (totalTasks === 0) {
+      return { dailyScore: 0, summary: "No tasks completed yet. Let's get started!" };
     }
 
-    score += input.streakBonus;
+    const alignedTasks = completedTasks.filter(task => task.energyLevel === energyLevel).length;
+
+    const baseScore = (alignedTasks / totalTasks) * 100;
+    
+    // Apply streak bonus, ensuring score doesn't exceed a cap (e.g., 150)
+    const finalScore = Math.min(150, Math.round(baseScore + streakBonus));
 
     const {output} = await prompt(input);
     return {
       ...output,
-      dailyScore: score,
+      dailyScore: finalScore,
     };
   }
 );
