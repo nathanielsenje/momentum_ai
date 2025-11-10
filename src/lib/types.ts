@@ -1,4 +1,6 @@
 export type EnergyLevel = 'Low' | 'Medium' | 'High';
+export type FocusType = 'Creative' | 'Analytical' | 'Physical' | 'Administrative';
+export type ProjectPriority = 'Low' | 'Medium' | 'High';
 
 export interface Task {
   id: string;
@@ -9,6 +11,10 @@ export interface Task {
   completedAt: string | null;
   createdAt: string;
   projectId?: string;
+  deadline?: string;
+  effort?: number; // 1-3 scale
+  focusType?: FocusType;
+  score?: number; // AI-generated score
 }
 
 export interface Category {
@@ -31,4 +37,5 @@ export interface MomentumScore {
 export interface Project {
     id: string;
     name: string;
+    priority: ProjectPriority;
 }

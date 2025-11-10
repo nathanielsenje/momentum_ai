@@ -11,6 +11,7 @@ import { MomentumCard } from '@/components/dashboard/momentum-card';
 import { SuggestedTasks } from '@/components/dashboard/suggested-tasks';
 import { TaskList } from '@/components/dashboard/task-list';
 import { Pomodoro } from '@/components/dashboard/pomodoro';
+import { Task } from '@/lib/types';
 
 export default async function DashboardPage() {
   const [tasks, todayEnergy, latestMomentum, categories, projects] = await Promise.all([
@@ -21,14 +22,11 @@ export default async function DashboardPage() {
     getProjects(),
   ]);
 
-  const suggestedTasksData = todayEnergy
-    ? await getSuggestedTasks(todayEnergy.level)
-    : { suggestedTasks: '' };
-
-  const suggestedTasks =
-    suggestedTasksData.suggestedTasks.length > 0
-      ? suggestedTasksData.suggestedTasks.split(',').map((t) => t.trim())
-      : [];
+  let suggestedTasks: Task[] = [];
+  if (todayEnergy) {
+    const suggestedTasksData = await getSuggestedTasks(todayEnergy.level);
+    suggestedTasks = suggestedTasksData.suggestedTasks;
+  }
 
   return (
     <div className="flex flex-col gap-4">

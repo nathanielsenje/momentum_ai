@@ -12,9 +12,10 @@ import {
   saveMomentumScore,
   getCategories,
   addProject,
+  getProjects,
 } from '@/lib/data';
 import type { EnergyLevel, Task } from '@/lib/types';
-import { suggestTasksBasedOnEnergy } from '@/ai/flows/suggest-tasks-based-on-energy';
+import { scoreAndSuggestTasks } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { calculateDailyMomentumScore } from '@/ai/flows/calculate-daily-momentum-score';
 import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
 import { subDays, format, isSameDay, parseISO } from 'date-fns';
@@ -24,12 +25,7 @@ export async function setEnergyLevelAction(level: EnergyLevel) {
   revalidatePath('/');
 }
 
-export async function createTaskAction(data: {
-  name: string;
-  category: string;
-  energyLevel: EnergyLevel;
-  projectId?: string;
-}) {
+export async function createTaskAction(data: Omit<Task, 'id'| 'completed' | 'completedAt' | 'createdAt'>) {
   await addTask(data);
   revalidatePath('/');
   revalidatePath('/projects');
@@ -87,14 +83,12 @@ export async function completeTaskAction(taskId: string, completed: boolean) {
 }
 
 export async function getSuggestedTasks(energyLevel: EnergyLevel) {
-  const [tasks, categories] = await Promise.all([getTasks(), getCategories()]);
-  const taskList = tasks.filter(t => !t.completed).map((t) => t.name).join(', ');
-  const categoryList = categories.map((c) => c.name).join(', ');
+  const [tasks, projects] = await Promise.all([getTasks(), getProjects()]);
 
-  const suggestions = await suggestTasksBasedOnEnergy({
-    energyLevel: energyLevel.toLowerCase() as 'low' | 'medium' | 'high',
-    taskCategories: categoryList,
-    taskList: taskList,
+  const suggestions = await scoreAndSuggestTasks({
+    energyLevel,
+    tasks: tasks,
+    projects: projects,
   });
 
   return suggestions;
@@ -115,7 +109,7 @@ export async function getFlowAlignmentReport() {
 }
 
 export async function createProjectAction(name: string) {
-    await addProject({ name });
+    await addProject({ name, priority: 'Medium' });
     revalidatePath('/projects');
     revalidatePath('/');
 }

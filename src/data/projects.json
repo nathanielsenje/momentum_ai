@@ -2,10 +2,12 @@
 [
     {
         "id": "1",
-        "name": "Personal"
+        "name": "Personal",
+        "priority": "Medium"
     },
     {
         "id": "2",
-        "name": "Work"
+        "name": "Work",
+        "priority": "High"
     }
 ]

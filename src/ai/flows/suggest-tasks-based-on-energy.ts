@@ -3,73 +3,72 @@
  * @fileOverview This file defines a Genkit flow for suggesting tasks based on the user's self-reported energy level.
  *
  * It exports:
- * - `suggestTasksBasedOnEnergy`: An async function to generate task suggestions based on energy level.
- * - `SuggestTasksBasedOnEnergyInput`: The TypeScript type for the input schema.
- * - `SuggestTasksBasedOnEnergyOutput`: The TypeScript type for the output schema.
+ * - `scoreAndSuggestTasks`: An async function to generate task suggestions based on energy level and other factors.
+ * - `ScoreAndSuggestTasksInput`: The TypeScript type for the input schema.
+ * - `ScoreAndSuggestTasksOutput`: The TypeScript type for the output schema.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { Project, Task } from '@/lib/types';
 
-const SuggestTasksBasedOnEnergyInputSchema = z.object({
+const ScoreAndSuggestTasksInputSchema = z.object({
   energyLevel: z
-    .enum(['low', 'medium', 'high'])
-    .describe('The user selected energy level (low, medium or high).'),
-  taskCategories: z
-    .string()
-    .describe("A comma separated list of task categories that the user can filter on. Example: 'Work, Personal, Errands'"),
-  taskList: z
-    .string()
-    .describe("A comma separated list of tasks that can be performed. Example: 'Write report, Do laundry, Go shopping'"),
+    .enum(['Low', 'Medium', 'High'])
+    .describe("The user's selected energy level (Low, Medium, or High)."),
+  tasks: z.array(z.custom<Task>()).describe('The list of available tasks.'),
+  projects: z.array(z.custom<Project>()).describe('The list of available projects.'),
 });
-export type SuggestTasksBasedOnEnergyInput = z.infer<typeof SuggestTasksBasedOnEnergyInputSchema>;
+export type ScoreAndSuggestTasksInput = z.infer<typeof ScoreAndSuggestTasksInputSchema>;
 
-const SuggestTasksBasedOnEnergyOutputSchema = z.object({
+const ScoreAndSuggestTasksOutputSchema = z.object({
   suggestedTasks: z
-    .string()
-    .describe(
-      'A comma-separated list of tasks that are most appropriate for the given energy level, task categories and task list.'
-    ),
+    .array(z.custom<Task>())
+    .describe('An array of task objects that are most appropriate for the given energy level and other factors, sorted by score.'),
 });
-export type SuggestTasksBasedOnEnergyOutput = z.infer<typeof SuggestTasksBasedOnEnergyOutputSchema>;
+export type ScoreAndSuggestTasksOutput = z.infer<typeof ScoreAndSuggestTasksOutputSchema>;
 
-export async function suggestTasksBasedOnEnergy(
-  input: SuggestTasksBasedOnEnergyInput
-): Promise<SuggestTasksBasedOnEnergyOutput> {
-  return suggestTasksBasedOnEnergyFlow(input);
+export async function scoreAndSuggestTasks(
+  input: ScoreAndSuggestTasksInput
+): Promise<ScoreAndSuggestTasksOutput> {
+  return scoreAndSuggestTasksFlow(input);
 }
 
-const suggestTasksPrompt = ai.definePrompt({
-  name: 'suggestTasksPrompt',
-  input: {schema: SuggestTasksBasedOnEnergyInputSchema},
-  output: {schema: SuggestTasksBasedOnEnergyOutputSchema},
-  prompt: `You are an AI assistant designed to suggest tasks based on the user's energy level.
-
-You will receive an energy level (low, medium, or high), a list of task categories, and a list of tasks.
-
-Based on the user's energy level, select the tasks that are most appropriate for them.
-
-Consider these guidelines:
-
-- **Low Energy:** Suggest tasks that require minimal effort and concentration, such as simple chores, administrative tasks, or relaxing activities.
-- **Medium Energy:** Suggest tasks that require a moderate amount of effort and concentration, such as focused work, creative projects, or social activities.
-- **High Energy:** Suggest tasks that require significant effort and concentration, such as challenging projects, physical activities, or complex problem-solving.
-
-Energy Level: {{{energyLevel}}}
-Task Categories: {{{taskCategories}}}
-Task List: {{{taskList}}}
-
-Suggested Tasks:`,
-});
-
-const suggestTasksBasedOnEnergyFlow = ai.defineFlow(
+const scoreAndSuggestTasksFlow = ai.defineFlow(
   {
-    name: 'suggestTasksBasedOnEnergyFlow',
-    inputSchema: SuggestTasksBasedOnEnergyInputSchema,
-    outputSchema: SuggestTasksBasedOnEnergyOutputSchema,
+    name: 'scoreAndSuggestTasksFlow',
+    inputSchema: ScoreAndSuggestTasksInputSchema,
+    outputSchema: ScoreAndSuggestTasksOutputSchema,
   },
-  async input => {
-    const {output} = await suggestTasksPrompt(input);
-    return output!;
+  async ({tasks, projects, energyLevel}) => {
+    const scoredTasks = tasks
+        .filter(task => !task.completed)
+        .map(task => {
+            const energyMatch = task.energyLevel === energyLevel ? 1 : 0;
+
+            let urgency = 0;
+            if (task.deadline) {
+                const deadline = new Date(task.deadline);
+                const today = new Date();
+                const diffDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                if (diffDays <= 1) urgency = 1;
+                else if (diffDays <= 3) urgency = 0.7;
+                else if (diffDays <= 7) urgency = 0.4;
+                else urgency = 0.1;
+            }
+
+            const project = projects.find(p => p.id === task.projectId);
+            const projectPriority = project?.priority === 'High' ? 1 : (project?.priority === 'Medium' ? 0.5 : 0.1);
+            
+            const score = (energyMatch * 0.5) + (urgency * 0.3) + (projectPriority * 0.2);
+
+            return {...task, score};
+        });
+
+    const sortedTasks = scoredTasks.sort((a, b) => b.score - a.score);
+
+    return {
+        suggestedTasks: sortedTasks.slice(0, 5) // Return top 5 suggestions
+    }
   }
 );
