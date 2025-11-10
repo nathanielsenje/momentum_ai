@@ -37,7 +37,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
 import { createTaskAction } from '@/app/actions';
-import type { Category, EnergyLevel, Project, Task, FocusType } from '@/lib/types';
+import type { Category, EnergyLevel, Project, Task, FocusType, EisenhowerMatrix } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -49,6 +49,7 @@ const taskFormSchema = z.object({
   deadline: z.date().optional(),
   effort: z.coerce.number().min(1).max(3).optional(),
   focusType: z.enum(['Creative', 'Analytical', 'Physical', 'Administrative']).optional(),
+  priority: z.enum(['Urgent & Important', 'Important & Not Urgent', 'Urgent & Not Important', 'Not Urgent & Not Important']).optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
@@ -285,6 +286,29 @@ export function AddTaskDialog({ categories, projects }: { categories: Category[]
                 )}
               />
             </div>
+             <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                       <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Urgent & Important">Urgent & Important</SelectItem>
+                        <SelectItem value="Important & Not Urgent">Important & Not Urgent</SelectItem>
+                        <SelectItem value="Urgent & Not Important">Urgent & Not Important</SelectItem>
+                        <SelectItem value="Not Urgent & Not Important">Not Urgent & Not Important</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="ghost">Cancel</Button>

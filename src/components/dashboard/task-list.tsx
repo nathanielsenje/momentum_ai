@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { AddTaskDialog } from './add-task-dialog';
 import type { Task, Category, EnergyLevel, EnergyLog, Project } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Zap, ZapOff, BatteryMedium, Target, ListTodo, Folder, PlayCircle } from 'lucide-react';
+import { Zap, ZapOff, BatteryMedium, Target, ListTodo, Folder, PlayCircle, Shield } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -129,6 +129,12 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                                         <div className="flex items-center gap-1">
                                             <Folder className="size-3" />
                                             <span>{projectName}</span>
+                                        </div>
+                                    )}
+                                    {task.priority && (
+                                        <div className="flex items-center gap-1">
+                                            <Shield className="size-3" />
+                                            <span>{task.priority}</span>
                                         </div>
                                     )}
                                 </div>
