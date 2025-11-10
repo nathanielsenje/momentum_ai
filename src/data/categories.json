@@ -1,0 +1,7 @@
+[
+  { "id": "work", "name": "Work" },
+  { "id": "personal", "name": "Personal" },
+  { "id": "learning", "name": "Learning" },
+  { "id": "health", "name": "Health" },
+  { "id": "chore", "name": "Chore" }
+

@@ -1,1 +1,6 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/visualize-flow-alignment.ts';
+import '@/ai/flows/suggest-tasks-based-on-energy.ts';
+import '@/ai/flows/calculate-daily-momentum-score.ts';
