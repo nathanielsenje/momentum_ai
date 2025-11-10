@@ -12,7 +12,6 @@ import {
 import { createTaskAction, getSuggestedTasks, completeTaskAction } from '@/app/actions';
 import { EnergyInput } from '@/components/dashboard/energy-input';
 import { MomentumCard } from '@/components/dashboard/momentum-card';
-import { SuggestedTasks } from '@/components/dashboard/suggested-tasks';
 import { TaskList } from '@/components/dashboard/task-list';
 import { Pomodoro } from '@/components/dashboard/pomodoro';
 import { ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
@@ -168,13 +167,8 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <MomentumCard latestMomentum={latestMomentum} />
-        <EnergyInput todayEnergy={todayEnergy} />
+        <EnergyInput todayEnergy={todayEnergy} suggestions={suggestions} />
       </div>
-
-      <SuggestedTasks
-        suggestions={suggestions}
-        energyLevel={todayEnergy?.level}
-      />
     </div>
   );
 }
