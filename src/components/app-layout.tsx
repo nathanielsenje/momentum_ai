@@ -85,7 +85,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Logo className="size-7 text-primary" />
             <span className="font-semibold font-headline">Momentum AI</span>
           </Link>
-          <SidebarTrigger asChild>
+          <SidebarTrigger>
             <Button variant="ghost" size="icon">
               <PanelLeft />
             </Button>

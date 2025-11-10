@@ -1,4 +1,4 @@
-import { Lightbulb, CheckCircle2 } from 'lucide-react';
+import { Lightbulb, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import type { EnergyLevel } from '@/lib/types';
 
@@ -27,7 +27,7 @@ export function SuggestedTasks({ suggestedTasks, energyLevel }: SuggestedTasksPr
           <ul className="space-y-3">
             {suggestedTasks.map((task, index) => (
               <li key={index} className="flex items-start gap-3">
-                <CheckCircle2 className="mt-1 size-4 shrink-0 text-primary" />
+                <CheckCircle className="mt-1 size-4 shrink-0 text-primary" />
                 <span className="text-sm">{task}</span>
               </li>
             ))}
