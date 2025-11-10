@@ -45,8 +45,17 @@ export function FlowVisualizer() {
           <CardDescription>Generate your personalized flow report.</CardDescription>
         </div>
         <Button onClick={handleGenerateReport} disabled={isPending}>
-          {isPending ? <Loader2 className="animate-spin" /> : <Wand2 />}
-          {isPending ? 'Generating...' : 'Generate Report'}
+          {isPending ? (
+            <>
+              <Loader2 className="animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Wand2 />
+              Generate Report
+            </>
+          )}
         </Button>
       </CardHeader>
       <CardContent>

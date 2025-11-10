@@ -36,6 +36,10 @@ export function TaskList({ tasks, categories, todayEnergy }: { tasks: Task[]; ca
     });
   };
 
+  const getCategoryName = (categoryId: string) => {
+    return categories.find(c => c.id === categoryId)?.name ?? categoryId;
+  }
+
   const filteredTasks = tasks.filter(task => {
     if (filter === 'all') return !task.completed;
     return task.energyLevel === filter && !task.completed;
@@ -90,7 +94,7 @@ export function TaskList({ tasks, categories, todayEnergy }: { tasks: Task[]; ca
                                     {task.name}
                                 </label>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                                    <Badge variant="secondary" className="capitalize">{task.category}</Badge>
+                                    <Badge variant="secondary" className="capitalize">{getCategoryName(task.category)}</Badge>
                                     <div className="flex items-center gap-1">
                                         <Icon className="size-3" />
                                         <span>{task.energyLevel} Energy</span>
