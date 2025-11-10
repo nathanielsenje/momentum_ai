@@ -18,7 +18,7 @@ const energyLevels: { level: EnergyLevel; icon: React.ElementType; description: 
 
 interface EnergyInputProps {
     todayEnergy?: EnergyLog;
-    suggestions: ScoreAndSuggestTasksOutput;
+    suggestions?: ScoreAndSuggestTasksOutput;
 }
 
 export function EnergyInput({ todayEnergy, suggestions }: EnergyInputProps) {
@@ -56,7 +56,7 @@ export function EnergyInput({ todayEnergy, suggestions }: EnergyInputProps) {
               <p className="text-xs text-muted-foreground">{currentLevel?.description}</p>
             </div>
           </div>
-          <SuggestedTasks suggestions={suggestions} energyLevel={todayEnergy.level} />
+          {suggestions && <SuggestedTasks suggestions={suggestions} energyLevel={todayEnergy.level} />}
         </CardContent>
       </Card>
     );
