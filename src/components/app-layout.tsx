@@ -78,7 +78,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
+        <SidebarFooter className="mt-auto">
             <ThemeSwitcher />
         </SidebarFooter>
       </Sidebar>

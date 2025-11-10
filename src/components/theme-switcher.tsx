@@ -12,7 +12,7 @@ export function ThemeSwitcher() {
     <Button 
       variant="ghost" 
       size="icon"
-      className="w-full"
+      className="w-full justify-start"
       onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
       aria-label="Toggle theme"
     >
