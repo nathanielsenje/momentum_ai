@@ -111,16 +111,6 @@ export default function DashboardPage() {
         Dashboard
       </h1>
       
-      <div className="grid gap-4 md:grid-cols-2">
-        <MomentumCard latestMomentum={latestMomentum} />
-        <EnergyInput todayEnergy={todayEnergy} />
-      </div>
-
-      <SuggestedTasks
-        suggestions={suggestions}
-        energyLevel={todayEnergy?.level}
-      />
-
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-1">
             <Pomodoro task={focusedTask} />
@@ -138,6 +128,16 @@ export default function DashboardPage() {
             />
         </div>
       </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <MomentumCard latestMomentum={latestMomentum} />
+        <EnergyInput todayEnergy={todayEnergy} />
+      </div>
+
+      <SuggestedTasks
+        suggestions={suggestions}
+        energyLevel={todayEnergy?.level}
+      />
     </div>
   );
 }
