@@ -4,9 +4,10 @@
 
 @layer base {
   :root {
+    --radius: 1rem;
     --background: 0 0% 95%; /* White Smoke */
     --foreground: 222 22% 21%; /* Gunmetal */
-    --card: 0 0% 95%; /* White Smoke */
+    --card: 0 0% 95% / 0.8; /* White Smoke with transparency */
     --card-foreground: 222 22% 21%; /* Gunmetal */
     --popover: 0 0% 95%; /* White Smoke */
     --popover-foreground: 222 22% 21%; /* Gunmetal */
@@ -28,7 +29,7 @@
     --chart-3: 23 89% 64%;
     --chart-4: 217 33% 68%;
     --chart-5: 23 89% 74%;
-    --sidebar-background: 222 22% 21%;
+    --sidebar-background: 222 22% 21% / 0.8;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 23 89% 54%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -41,7 +42,7 @@
   .dark {
     --background: 222 22% 21%; /* Gunmetal */
     --foreground: 0 0% 98%;
-    --card: 222 22% 24%; /* Slightly lighter Gunmetal */
+    --card: 222 22% 24% / 0.7; /* Slightly lighter Gunmetal with transparency */
     --card-foreground: 0 0% 98%;
     --popover: 222 22% 21%;
     --popover-foreground: 0 0% 98%;
@@ -49,7 +50,7 @@
     --primary-foreground: 0 0% 100%;
     --secondary: 217 33% 58%; /* Glaucous */
     --secondary-foreground: 0 0% 100%;
-    --muted: 222 22% 28%;
+    --muted: 222 22% 28% / 0.7;
     --muted-foreground: 0 0% 60%;
     --accent: 217 33% 58%; /* Glaucous */
     --accent-foreground: 0 0% 100%;
@@ -58,7 +59,7 @@
     --border: 222 22% 31%;
     --input: 222 22% 31%;
     --ring: 23 89% 54%; /* Pumpkin */
-    --sidebar-background: 222 22% 18%;
+    --sidebar-background: 222 22% 18% / 0.7;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 23 89% 54%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -75,5 +76,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   }
 }
