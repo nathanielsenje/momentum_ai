@@ -44,30 +44,30 @@
   .dark {
     --background: 216 93% 14%; /* Oxford Blue */
     --foreground: 0 0% 95%; /* White Smoke */
-    --card: 205 93% 19% / 0.7; /* Prussian Blue with transparency */
+    --card: 206 65% 39% / 0.7; /* UCLA Blue with transparency */
     --card-foreground: 0 0% 95%;
     --popover: 216 93% 14%;
     --popover-foreground: 0 0% 95%;
     --primary: 23 90% 55%; /* Pumpkin */
     --primary-foreground: 0 0% 100%;
-    --secondary: 205 93% 19%;
+    --secondary: 206 65% 39%; /* UCLA Blue */
     --secondary-foreground: 0 0% 100%;
-    --muted: 205 93% 22% / 0.7;
+    --muted: 206 65% 42% / 0.7; /* UCLA Blue lighter */
     --muted-foreground: 0 0% 70%;
     --accent: 23 90% 55%; /* Pumpkin */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 205 93% 25%;
-    --input: 205 93% 25%;
+    --border: 206 65% 45%; /* UCLA Blue lighter */
+    --input: 206 65% 45%; /* UCLA Blue lighter */
     --ring: 23 90% 55%; /* Pumpkin */
     --sidebar-background: 216 93% 10% / 0.7;
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 23 90% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 205 93% 19%;
+    --sidebar-accent: 206 65% 39%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 205 93% 25%;
+    --sidebar-border: 206 65% 45%;
     --sidebar-ring: 23 90% 55%;
   }
 }
