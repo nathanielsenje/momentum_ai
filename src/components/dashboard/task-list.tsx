@@ -195,7 +195,7 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                                     disabled={isPending}
                                     className="mt-1"
                                 />
-                                <label htmlFor={`task-${task.id}`} className="flex-grow text-sm text-muted-foreground line-through">
+                                <label htmlFor={`task-${task.id}`} className="flex-grow text-xs text-muted-foreground line-through">
                                     {task.name}
                                 </label>
                             </div>
