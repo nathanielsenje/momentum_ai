@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, Gauge, PanelLeft, FolderKanban } from 'lucide-react';
+import { Activity, Gauge, PanelLeft, FolderKanban, Settings, Sun, Moon } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -15,13 +15,22 @@ import {
   SidebarTrigger,
   useSidebar,
   SidebarFooter,
+  SidebarRail,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
-import { ThemeSwitcher } from '@/components/theme-switcher';
+import { useTheme } from 'next-themes';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { setOpen, isMobile } = useSidebar();
+  const { setTheme, theme } = useTheme();
 
   React.useEffect(() => {
     if (isMobile) {
@@ -32,6 +41,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Sidebar>
+        <SidebarRail />
         <SidebarHeader>
           <div className="flex items-center gap-2">
             <Logo className="size-8 text-primary" />
@@ -79,7 +89,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="mt-auto">
-            <ThemeSwitcher />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  size="icon"
+                >
+                  <Settings />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="end">
+                <DropdownMenuItem onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+                   {theme === 'light' ? <Moon /> : <Sun />}
+                  <span>Toggle Theme</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="p-4 md:p-6 lg:p-8">
