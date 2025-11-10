@@ -71,8 +71,8 @@
     "projectId": "1762771405535",
     "effort": 2,
     "id": "1762774552708",
-    "completed": false,
-    "completedAt": null,
+    "completed": true,
+    "completedAt": "2025-11-10T11:48:12.567Z",
     "createdAt": "2025-11-10T11:35:52.708Z"
   },
   {
@@ -84,8 +84,8 @@
     "focusType": "Creative",
     "priority": "Urgent & Not Important",
     "id": "1762774594007",
-    "completed": false,
-    "completedAt": null,
+    "completed": true,
+    "completedAt": "2025-11-10T11:48:24.099Z",
     "createdAt": "2025-11-10T11:36:34.007Z"
   }
 ]

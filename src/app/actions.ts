@@ -16,8 +16,10 @@ import {
   getProjects,
   updateProject,
   deleteProject,
+  addRecurringTask,
+  updateRecurringTask,
 } from '@/lib/data';
-import type { EnergyLevel, Project, Task } from '@/lib/types';
+import type { EnergyLevel, Project, RecurringTask, Task } from '@/lib/types';
 import { scoreAndSuggestTasks, ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { calculateDailyMomentumScore } from '@/ai/flows/calculate-daily-momentum-score';
 import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
@@ -144,4 +146,14 @@ export async function deleteProjectAction(projectId: string) {
     await deleteProject(projectId);
     revalidatePath('/projects');
     revalidatePath('/');
+}
+
+export async function createRecurringTaskAction(data: Omit<RecurringTask, 'id' | 'lastCompleted'>) {
+    await addRecurringTask(data);
+    revalidatePath('/recurring');
+}
+
+export async function completeRecurringTaskAction(taskId: string) {
+    await updateRecurringTask(taskId, { lastCompleted: new Date().toISOString() });
+    revalidatePath('/recurring');
 }

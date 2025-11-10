@@ -41,3 +41,10 @@ export interface Project {
     name: string;
     priority: ProjectPriority;
 }
+
+export interface RecurringTask {
+  id: string;
+  name: string;
+  frequency: 'Weekly' | 'Monthly';
+  lastCompleted: string | null;
+}

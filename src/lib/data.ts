@@ -2,7 +2,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project } from './types';
+import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, RecurringTask } from './types';
 import { format } from 'date-fns';
 
 const dataDir = path.join(process.cwd(), 'data');
@@ -170,4 +170,31 @@ export async function deleteProject(projectId: string): Promise<void> {
     const tasks = await getTasks();
     const updatedTasks = tasks.filter(t => t.projectId !== projectId);
     await writeData('tasks.json', updatedTasks);
+}
+
+// Recurring Task Functions
+export async function getRecurringTasks(): Promise<RecurringTask[]> {
+  return readData<RecurringTask[]>('recurring-tasks.json');
+}
+
+export async function addRecurringTask(taskData: Omit<RecurringTask, 'id' | 'lastCompleted'>): Promise<RecurringTask> {
+  const tasks = await getRecurringTasks();
+  const newTask: RecurringTask = {
+    ...taskData,
+    id: Date.now().toString(),
+    lastCompleted: null,
+  };
+  tasks.push(newTask);
+  await writeData('recurring-tasks.json', tasks);
+  return newTask;
+}
+
+export async function updateRecurringTask(taskId: string, updates: Partial<RecurringTask>): Promise<RecurringTask | undefined> {
+  const tasks = await getRecurringTasks();
+  const taskIndex = tasks.findIndex(t => t.id === taskId);
+  if (taskIndex === -1) return undefined;
+
+  tasks[taskIndex] = { ...tasks[taskIndex], ...updates };
+  await writeData('recurring-tasks.json', tasks);
+  return tasks[taskIndex];
 }
