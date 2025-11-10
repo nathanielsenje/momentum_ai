@@ -58,7 +58,7 @@ export function Pomodoro({ task }: { task: Task | null }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center gap-4">
-        <div className="text-7xl font-bold font-mono text-primary">
+        <div className="text-8xl font-bold font-mono text-primary">
           {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
         </div>
         <div className="flex gap-2">

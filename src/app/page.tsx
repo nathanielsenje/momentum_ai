@@ -143,11 +143,11 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-1">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div>
             <Pomodoro task={focusedTask} />
         </div>
-        <div className="lg:col-span-2">
+        <div>
             <TaskList 
               tasks={tasks} 
               categories={categories} 
