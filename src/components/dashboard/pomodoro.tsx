@@ -12,7 +12,6 @@ export function Pomodoro() {
   const [seconds, setSeconds] = React.useState(0);
   const [isActive, setIsActive] = React.useState(false);
   const [sessionType, setSessionType] = React.useState<'Focus' | 'Break'>('Focus');
-  const audioRef = React.useRef<HTMLAudioElement>(null);
 
   React.useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -25,9 +24,6 @@ export function Pomodoro() {
           setSeconds(59);
         } else {
           // Timer finished
-          if (audioRef.current) {
-            audioRef.current.play();
-          }
           setIsActive(false);
           if (sessionType === 'Focus') {
             setSessionType('Break');
@@ -85,7 +81,6 @@ export function Pomodoro() {
             Reset
           </Button>
         </div>
-        <audio ref={audioRef} src="/notification.mp3" preload="auto" />
       </CardContent>
     </Card>
   );
