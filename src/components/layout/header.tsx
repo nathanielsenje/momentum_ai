@@ -17,7 +17,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className="hidden md:flex items-center justify-between">
+    <header className="hidden md:flex items-center justify-between p-4 md:p-6 lg:p-8 pt-0">
       <div className="relative w-full max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input placeholder="Search..." className="pl-9" />

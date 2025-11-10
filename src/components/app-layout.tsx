@@ -111,8 +111,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="p-4 md:p-6 lg:p-8 flex flex-col gap-4">
-        <header className="flex items-center justify-between md:hidden">
+      <SidebarInset className="flex flex-col">
+        <header className="flex items-center justify-between md:hidden p-4">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="size-7 text-primary" />
             <span className="font-semibold font-headline">Momentum AI</span>
@@ -122,7 +122,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </SidebarTrigger>
         </header>
         <Header />
-        {children}
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+            {children}
+        </div>
       </SidebarInset>
     </>
   );
