@@ -7,17 +7,29 @@ import { format } from 'date-fns';
 
 const dataDir = path.join(process.cwd(), 'data');
 
+// In-memory cache
+const cache: { [key: string]: { data: any; timestamp: number } } = {};
+const CACHE_DURATION = process.env.NODE_ENV === 'development' ? 1000 : 30000; // 1s in dev, 30s in prod
+
 async function readData<T>(filename: string): Promise<T> {
+  const now = Date.now();
+  if (cache[filename] && (now - cache[filename].timestamp) < CACHE_DURATION) {
+    return cache[filename].data as T;
+  }
+
   const filePath = path.join(dataDir, filename);
   try {
     // Ensure directory exists
     await fs.mkdir(dataDir, { recursive: true });
     const data = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(data) as T;
+    const parsedData = JSON.parse(data);
+    cache[filename] = { data: parsedData, timestamp: now };
+    return parsedData as T;
   } catch (error) {
     if (isNodeError(error) && error.code === 'ENOENT') {
       const defaultData = filename === 'reports.json' ? {} : [];
       await fs.writeFile(filePath, JSON.stringify(defaultData, null, 2), 'utf-8');
+      cache[filename] = { data: defaultData, timestamp: now };
       return defaultData as T;
     }
     console.error(`Error reading or creating ${filename}:`, error);
@@ -29,6 +41,8 @@ async function writeData<T>(filename: string, data: T): Promise<void> {
   const filePath = path.join(dataDir, filename);
   await fs.mkdir(dataDir, { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  // Invalidate cache on write
+  delete cache[filename];
 }
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {
@@ -51,19 +65,25 @@ export async function addTask(taskData: Omit<Task, 'id' | 'completed' | 'complet
     completedAt: null,
     createdAt: new Date().toISOString(),
   };
-  tasks.push(newTask);
-  await writeData('tasks.json', tasks);
+  const updatedTasks = [...tasks, newTask];
+  await writeData('tasks.json', updatedTasks);
   return newTask;
 }
 
-export async function updateTask(taskId: string, updates: Partial<Task>): Promise<Task | undefined> {
+export async function updateTask(taskId: string, updates: Partial<Omit<Task, 'id'>>): Promise<Task | undefined> {
   const tasks = await getTasks();
-  const taskIndex = tasks.findIndex(t => t.id === taskId);
-  if (taskIndex === -1) return undefined;
+  let updatedTask: Task | undefined;
+  const updatedTasks = tasks.map(t => {
+      if (t.id === taskId) {
+          updatedTask = { ...t, ...updates };
+          return updatedTask;
+      }
+      return t;
+  });
+  if (!updatedTask) return undefined;
 
-  tasks[taskIndex] = { ...tasks[taskIndex], ...updates };
-  await writeData('tasks.json', tasks);
-  return tasks[taskIndex];
+  await writeData('tasks.json', updatedTasks);
+  return updatedTask;
 }
 
 export async function deleteTask(taskId: string): Promise<void> {
@@ -85,16 +105,18 @@ export async function getEnergyLog(): Promise<EnergyLog[]> {
 export async function setTodayEnergy(level: EnergyLevel): Promise<EnergyLog> {
   const logs = await getEnergyLog();
   const today = getToday();
-  const todayLogIndex = logs.findIndex(log => log.date === today);
+  
+  const existingLogIndex = logs.findIndex(log => log.date === today);
 
   let newLog: EnergyLog;
-  if (todayLogIndex > -1) {
-    logs[todayLogIndex].level = level;
-    newLog = logs[todayLogIndex];
+  if (existingLogIndex > -1) {
+    logs[existingLogIndex].level = level;
+    newLog = logs[existingLogIndex];
   } else {
     newLog = { date: today, level };
     logs.push(newLog);
   }
+  
   await writeData('energy-log.json', logs);
   return newLog;
 }
@@ -119,13 +141,13 @@ export async function getLatestMomentum(): Promise<MomentumScore | undefined> {
 export async function saveMomentumScore(scoreData: Omit<MomentumScore, 'date'>): Promise<MomentumScore> {
     const history = await getMomentumHistory();
     const today = getToday();
-    const todayScoreIndex = history.findIndex(s => s.date === today);
     
     const newScore: MomentumScore = {
         ...scoreData,
         date: today,
     };
     
+    const todayScoreIndex = history.findIndex(s => s.date === today);
     if (todayScoreIndex > -1) {
         history[todayScoreIndex] = newScore;
     } else {
@@ -147,19 +169,26 @@ export async function addProject(projectData: Omit<Project, 'id'>): Promise<Proj
         ...projectData,
         id: Date.now().toString(),
     };
-    projects.push(newProject);
-    await writeData('projects.json', projects);
+    const updatedProjects = [...projects, newProject];
+    await writeData('projects.json', updatedProjects);
     return newProject;
 }
 
 export async function updateProject(projectId: string, updates: Partial<Project>): Promise<Project | undefined> {
     const projects = await getProjects();
-    const projectIndex = projects.findIndex(p => p.id === projectId);
-    if (projectIndex === -1) return undefined;
+    let updatedProject: Project | undefined;
+    const updatedProjects = projects.map(p => {
+        if (p.id === projectId) {
+            updatedProject = { ...p, ...updates };
+            return updatedProject;
+        }
+        return p;
+    });
 
-    projects[projectIndex] = { ...projects[projectIndex], ...updates };
-    await writeData('projects.json', projects);
-    return projects[projectIndex];
+    if (!updatedProject) return undefined;
+
+    await writeData('projects.json', updatedProjects);
+    return updatedProject;
 }
 
 export async function deleteProject(projectId: string): Promise<void> {
@@ -185,19 +214,26 @@ export async function addRecurringTask(taskData: Omit<RecurringTask, 'id' | 'las
     id: Date.now().toString(),
     lastCompleted: null,
   };
-  tasks.push(newTask);
-  await writeData('recurring-tasks.json', tasks);
+  const updatedTasks = [...tasks, newTask];
+  await writeData('recurring-tasks.json', updatedTasks);
   return newTask;
 }
 
-export async function updateRecurringTask(taskId: string, updates: Partial<RecurringTask>): Promise<RecurringTask | undefined> {
+export async function updateRecurringTask(taskId: string, updates: Partial<Omit<RecurringTask, 'id'>>): Promise<RecurringTask | undefined> {
   const tasks = await getRecurringTasks();
-  const taskIndex = tasks.findIndex(t => t.id === taskId);
-  if (taskIndex === -1) return undefined;
+  let updatedTask: RecurringTask | undefined;
+  const updatedTasks = tasks.map(t => {
+      if (t.id === taskId) {
+          updatedTask = { ...t, ...updates };
+          return updatedTask;
+      }
+      return t;
+  });
 
-  tasks[taskIndex] = { ...tasks[taskIndex], ...updates };
-  await writeData('recurring-tasks.json', tasks);
-  return tasks[taskIndex];
+  if (!updatedTask) return undefined;
+  
+  await writeData('recurring-tasks.json', updatedTasks);
+  return updatedTask;
 }
 
 // Report Functions
@@ -208,34 +244,37 @@ export async function getReports(): Promise<Record<string, DailyReport>> {
 export async function getTodaysReport(): Promise<DailyReport> {
     const reports = await getReports();
     const today = getToday();
-    if (!reports[today]) {
-        const tasks = await getTasks();
-        const todaysTasks = tasks.filter(t => t.createdAt && format(new Date(t.createdAt), 'yyyy-MM-dd') === today);
-        reports[today] = {
-            date: today,
-            startTime: null,
-            endTime: null,
-            generatedReport: null,
-            goals: todaysTasks.length,
-            completed: todaysTasks.filter(t => t.completed).length,
-            inProgress: todaysTasks.filter(t => !t.completed).length,
-        };
+    
+    // Recalculate stats every time
+    const tasks = await getTasks();
+    const todaysTasks = tasks.filter(t => t.createdAt && format(new Date(t.createdAt), 'yyyy-MM-dd') === today);
+
+    const existingReport = reports[today] || {
+        date: today,
+        startTime: null,
+        endTime: null,
+        generatedReport: null,
+    };
+    
+    const updatedReport = {
+        ...existingReport,
+        goals: todaysTasks.length,
+        completed: todaysTasks.filter(t => t.completed).length,
+        inProgress: todaysTasks.filter(t => !t.completed).length,
+    };
+
+    if (!reports[today] || JSON.stringify(reports[today]) !== JSON.stringify(updatedReport)) {
+        reports[today] = updatedReport;
         await writeData('reports.json', reports);
-    } else {
-        // Recalculate stats in case tasks were added/completed
-        const tasks = await getTasks();
-        const todaysTasks = tasks.filter(t => t.createdAt && format(new Date(t.createdAt), 'yyyy-MM-dd') === today);
-        reports[today].goals = todaysTasks.length;
-        reports[today].completed = todaysTasks.filter(t => t.completed).length;
-        reports[today].inProgress = todaysTasks.filter(t => !t.completed).length;
     }
-    return reports[today];
+    
+    return updatedReport;
 }
 
 export async function updateTodaysReport(updates: Partial<DailyReport>): Promise<DailyReport> {
     const reports = await getReports();
     const today = getToday();
-    const todaysReport = await getTodaysReport();
+    const todaysReport = await getTodaysReport(); // Ensures we have the latest stats
 
     reports[today] = { ...todaysReport, ...updates };
     await writeData('reports.json', reports);

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Calendar as CalendarIcon, Trash2 } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,19 +13,9 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import {
   Form,
   FormControl,
@@ -47,12 +37,13 @@ import { Calendar } from '@/components/ui/calendar';
 import type { Category, Project, Task } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 
 const taskFormSchema = z.object({
   name: z.string().min(3, 'Task name must be at least 3 characters.'),
   category: z.string().min(1, 'Please select a category.'),
   energyLevel: z.enum(['Low', 'Medium', 'High']),
-  projectId: z.string().optional(),
+  projectId: z.string().optional().default(''),
   deadline: z.date().optional(),
   effort: z.coerce.number().min(1).max(3).optional(),
   focusType: z.enum(['Creative', 'Analytical', 'Physical', 'Administrative']).optional(),
@@ -60,53 +51,86 @@ const taskFormSchema = z.object({
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
-type TaskUpdateData = Partial<Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>>;
+type TaskData = Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>;
 
-interface EditTaskDialogProps {
-    task: Task;
+interface TaskFormDialogProps {
+    task?: Task | null;
     categories: Category[];
     projects: Project[];
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    onUpdateTask: (taskId: string, data: TaskUpdateData) => void;
-    onDeleteTask: (taskId: string) => void;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    onSave: (data: TaskData | Partial<Omit<Task, 'id'>>, taskId?: string) => void;
+    onDelete?: (taskId: string) => void;
     isPending: boolean;
 }
 
-export function EditTaskDialog({ task, categories, projects, open, onOpenChange, onUpdateTask, onDeleteTask, isPending }: EditTaskDialogProps) {
+export function TaskFormDialog({ task, categories, projects, open: externalOpen, onOpenChange: externalOnOpenChange, onSave, onDelete, isPending }: TaskFormDialogProps) {
+  const [internalOpen, setInternalOpen] = React.useState(false);
+
+  const isEditing = !!task;
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const onOpenChange = externalOnOpenChange !== undefined ? externalOnOpenChange : setInternalOpen;
+  
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
-      name: task.name,
-      category: task.category,
-      energyLevel: task.energyLevel,
-      projectId: task.projectId || '',
-      deadline: task.deadline ? new Date(task.deadline) : undefined,
-      effort: task.effort,
-      focusType: task.focusType,
-      priority: task.priority,
+      name: '',
+      category: '',
+      energyLevel: 'Medium',
+      projectId: '',
     },
   });
 
+  React.useEffect(() => {
+    if (open && task) {
+        form.reset({
+            name: task.name,
+            category: task.category,
+            energyLevel: task.energyLevel,
+            projectId: task.projectId || '',
+            deadline: task.deadline ? new Date(task.deadline) : undefined,
+            effort: task.effort,
+            focusType: task.focusType,
+            priority: task.priority,
+        });
+    } else if (!open) {
+        form.reset();
+    }
+  }, [open, task, form]);
+
+
   const onSubmit = (data: TaskFormValues) => {
-    const taskData: TaskUpdateData = {
+    const taskData: TaskData | Partial<Omit<Task, 'id'>> = {
         ...data,
+        projectId: data.projectId || undefined,
         deadline: data.deadline ? data.deadline.toISOString() : undefined,
     };
-    onUpdateTask(task.id, taskData);
+    onSave(taskData, task?.id);
+    onOpenChange(false);
   };
   
   const handleDelete = () => {
-    onDeleteTask(task.id);
+    if(task && onDelete) {
+        onDelete(task.id);
+        onOpenChange(false);
+    }
   }
+
+  const triggerButton = isEditing ? null : (
+     <Button size="sm">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Task
+        </Button>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      {triggerButton && <DialogTrigger asChild>{triggerButton}</DialogTrigger>}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Edit Task</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Task' : 'Add a new task'}</DialogTitle>
           <DialogDescription>
-            Update the details of your task.
+            {isEditing ? 'Update the details of your task.' : 'What do you want to accomplish? Assign it an energy level.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -134,10 +158,11 @@ export function EditTaskDialog({ task, categories, projects, open, onOpenChange,
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a project" />
+                            <SelectValue placeholder="No project" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="">No project</SelectItem>
                           {projects.map((project) => (
                             <SelectItem key={project.id} value={project.id}>
                               {project.name}
@@ -180,7 +205,7 @@ export function EditTaskDialog({ task, categories, projects, open, onOpenChange,
                                 selected={field.value}
                                 onSelect={field.onChange}
                                 disabled={(date) =>
-                                date < new Date() || date < new Date("1900-01-01")
+                                date < new Date(new Date().setHours(0,0,0,0))
                                 }
                                 initialFocus
                             />
@@ -309,34 +334,36 @@ export function EditTaskDialog({ task, categories, projects, open, onOpenChange,
                   </FormItem>
                 )}
               />
-            <DialogFooter className="justify-between">
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button type="button" variant="destructive" size="sm">
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete Task
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete this task.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDelete} disabled={isPending}>
-                                {isPending ? "Deleting..." : "Delete"}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+            <DialogFooter className={isEditing ? "justify-between" : "justify-end"}>
+                {isEditing && (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button type="button" variant="destructive" size="sm">
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete Task
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete this task.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDelete} disabled={isPending}>
+                                    {isPending ? "Deleting..." : "Delete"}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
                 <div className="flex gap-2">
                     <DialogClose asChild>
                         <Button type="button" variant="ghost">Cancel</Button>
                     </DialogClose>
                     <Button type="submit" disabled={isPending}>
-                        {isPending ? 'Saving...' : 'Save Changes'}
+                        {isPending ? 'Saving...' : 'Save'}
                     </Button>
                 </div>
             </DialogFooter>

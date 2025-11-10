@@ -12,10 +12,10 @@ import type { DailyReport } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 
 interface DailyReportCardProps {
-  report: DailyReport;
+  initialReport: DailyReport;
 }
 
-export function DailyReportCard({ report: initialReport }: DailyReportCardProps) {
+export function DailyReportCard({ initialReport }: DailyReportCardProps) {
   const [report, setReport] = React.useState(initialReport);
   const [clientFormattedTimes, setClientFormattedTimes] = React.useState({ startTime: 'Not set', endTime: 'Not set' });
   const [isPending, startTransition] = useTransition();
@@ -27,8 +27,8 @@ export function DailyReportCard({ report: initialReport }: DailyReportCardProps)
 
   React.useEffect(() => {
     setClientFormattedTimes({
-      startTime: initialReport.startTime ? format(parseISO(initialReport.startTime), 'h:mm a') : 'Not set',
-      endTime: initialReport.endTime ? format(parseISO(initialReport.endTime), 'h:mm a') : 'Not set',
+      startTime: initialReport.startTime ? format(parseISO(initialReport.startTime), 'p') : 'Not set',
+      endTime: initialReport.endTime ? format(parseISO(initialReport.endTime), 'p') : 'Not set',
     });
   }, [initialReport.startTime, initialReport.endTime]);
 

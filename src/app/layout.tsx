@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AppLayout } from '@/components/app-layout';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { ThemeProvider } from '@/components/theme-provider';
+import { PomodoroProvider } from '@/components/dashboard/pomodoro-provider';
 
 export const metadata: Metadata = {
   title: 'Momentum AI',
@@ -35,13 +36,15 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider>
-            <AppLayout>{children}</AppLayout>
-          </SidebarProvider>
+          <PomodoroProvider>
+            <SidebarProvider>
+              <AppLayout>{children}</AppLayout>
+            </SidebarProvider>
+          </PomodoroProvider>
           <Toaster />
         </ThemeProvider>
       </body>

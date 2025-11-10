@@ -1,21 +1,50 @@
-import { TrendingUp, BrainCircuit } from 'lucide-react';
+'use client';
+
+import * as React from 'react';
+import { useTransition } from 'react';
+import { TrendingUp, BrainCircuit, Lightbulb } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import type { MomentumScore, EnergyLog, EnergyLevel } from '@/lib/types';
+import type { MomentumScore, EnergyLog, Project, Task } from '@/lib/types';
 import { EnergyInput } from './energy-input';
 import { SuggestionsDialog } from './suggestions-dialog';
-import type { ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
-
+import { getSuggestedTasks, ScoreAndSuggestTasksOutput } from '@/app/actions';
 
 interface MomentumCardProps {
-    latestMomentum?: MomentumScore;
-    routineSuggestion?: string;
-    todayEnergy?: EnergyLog;
-    suggestions?: ScoreAndSuggestTasksOutput;
-    onEnergyChange: (newEnergy: EnergyLog) => void;
+    initialLatestMomentum?: MomentumScore;
+    initialTodayEnergy?: EnergyLog;
+    tasks: Task[];
+    projects: Project[];
 }
 
-export function MomentumCard({ latestMomentum, routineSuggestion, todayEnergy, suggestions, onEnergyChange }: MomentumCardProps) {
+export function MomentumCard({ initialLatestMomentum, initialTodayEnergy, tasks, projects }: MomentumCardProps) {
+  const [latestMomentum, setLatestMomentum] = React.useState(initialLatestMomentum);
+  const [todayEnergy, setTodayEnergy] = React.useState(initialTodayEnergy);
+  const [suggestions, setSuggestions] = React.useState<ScoreAndSuggestTasksOutput>({
+    suggestedTasks: [],
+    routineSuggestion: undefined,
+  });
+  const [isPending, startTransition] = useTransition();
+
+  const handleEnergyChange = (newEnergy: EnergyLog) => {
+    setTodayEnergy(newEnergy);
+  };
+
+  React.useEffect(() => {
+    if (todayEnergy) {
+      startTransition(async () => {
+        const suggestionData = await getSuggestedTasks({
+            energyLevel: todayEnergy.level,
+            tasks,
+            projects,
+            completedTasks: tasks.filter(t => t.completed)
+        });
+        setSuggestions(suggestionData);
+      });
+    }
+  }, [todayEnergy?.level, tasks, projects]);
+
+
   const score = latestMomentum?.score ?? 0;
   const streak = latestMomentum?.streak ?? 0;
   
@@ -30,7 +59,7 @@ export function MomentumCard({ latestMomentum, routineSuggestion, todayEnergy, s
             </CardTitle>
             <CardDescription>Your daily overview and task-energy alignment.</CardDescription>
           </div>
-          {todayEnergy && suggestions && (
+          {todayEnergy && (
             <SuggestionsDialog suggestions={suggestions} energyLevel={todayEnergy.level} />
           )}
         </div>
@@ -48,14 +77,14 @@ export function MomentumCard({ latestMomentum, routineSuggestion, todayEnergy, s
                     <p className="text-xs text-muted-foreground">Day Streak</p>
                 </div>
             </div>
-            <EnergyInput todayEnergy={todayEnergy} onEnergyChange={onEnergyChange} />
+            <EnergyInput todayEnergy={todayEnergy} onEnergyChange={handleEnergyChange} />
         </div>
 
-        {routineSuggestion && (
+        {suggestions.routineSuggestion && (
             <div className="p-3 text-xs rounded-lg bg-muted text-muted-foreground border border-primary/20">
                 <div className="flex items-start gap-2">
                     <BrainCircuit className="size-4 shrink-0 mt-0.5 text-primary" />
-                    <p><span className="font-semibold text-foreground">Pattern Detected:</span> {routineSuggestion}</p>
+                    <p><span className="font-semibold text-foreground">Pattern Detected:</span> {suggestions.routineSuggestion}</p>
                 </div>
             </div>
         )}
@@ -68,7 +97,7 @@ export function MomentumCard({ latestMomentum, routineSuggestion, todayEnergy, s
                 </div>
             </div>
         )}
-         {!latestMomentum && !routineSuggestion && !todayEnergy && (
+         {!latestMomentum && !suggestions.routineSuggestion && !todayEnergy && (
             <div className="p-3 text-sm text-center rounded-lg bg-muted text-muted-foreground">
                 <p>Select your energy level to get started!</p>
             </div>

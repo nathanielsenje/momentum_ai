@@ -10,9 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import type { Project, Task } from '@/lib/types';
-import { cn } from '@/lib/utils';
 import { Folder } from 'lucide-react';
 
 interface ProjectDialogProps {
@@ -46,8 +44,8 @@ export function ProjectDialog({ project, tasks, open, onOpenChange }: ProjectDia
                 <div className="space-y-2">
                   {openTasks.map(task => (
                     <div key={task.id} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
-                      <Checkbox id={`task-${task.id}`} checked={false} disabled />
-                      <label htmlFor={`task-${task.id}`} className="text-sm font-medium">{task.name}</label>
+                      <Checkbox id={`task-overview-${task.id}`} checked={false} disabled />
+                      <label htmlFor={`task-overview-${task.id}`} className="text-sm font-medium">{task.name}</label>
                     </div>
                   ))}
                 </div>
@@ -59,9 +57,9 @@ export function ProjectDialog({ project, tasks, open, onOpenChange }: ProjectDia
                 <div className="space-y-2">
                   {completedTasks.map(task => (
                     <div key={task.id} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
-                      <Checkbox id={`task-${task.id}`} checked={true} disabled />
+                      <Checkbox id={`task-overview-${task.id}`} checked={true} disabled />
                        <label
-                        htmlFor={`task-${task.id}`}
+                        htmlFor={`task-overview-${task.id}`}
                         className="text-sm font-medium text-muted-foreground line-through"
                       >
                         {task.name}

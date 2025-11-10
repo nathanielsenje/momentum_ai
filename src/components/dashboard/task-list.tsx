@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AddTaskDialog } from './add-task-dialog';
+import { TaskFormDialog } from './task-form-dialog';
 import type { Task, Category, EnergyLevel, EnergyLog, Project, EisenhowerMatrix } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Zap, ZapOff, BatteryMedium, Target, ListTodo, Folder, PlayCircle, Shield, Edit } from 'lucide-react';
@@ -23,6 +23,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useToast } from '@/hooks/use-toast';
+import { completeTaskAction, createTaskAction, deleteTaskAction, updateTaskAction } from '@/app/actions';
+import { PomodoroContext } from './pomodoro-provider';
 
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
@@ -39,27 +42,100 @@ const priorityColors: Record<EisenhowerMatrix, string> = {
 }
 
 interface TaskListProps {
-    tasks: Task[];
+    initialTasks: Task[];
     categories: Category[];
     todayEnergy?: EnergyLog;
     projects: Project[];
-    onFocusTask: (task: Task) => void;
-    onEditTask: (task: Task) => void;
-    focusedTaskId: string | null;
-    onCreateTask: (data: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => void;
-    onCompleteTask: (taskId: string, completed: boolean) => void;
-    isCreatingTask: boolean;
 }
 
-export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask, onEditTask, focusedTaskId, onCreateTask, onCompleteTask, isCreatingTask }: TaskListProps) {
+export function TaskList({ initialTasks, categories, projects, todayEnergy }: TaskListProps) {
+  const [tasks, setTasks] = React.useState(initialTasks);
   const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = React.useState<EnergyLevel | 'all'>('all');
+  const [editingTask, setEditingTask] = React.useState<Task | null>(null);
+  const { toast } = useToast();
+  const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
+
+  React.useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
 
   const handleComplete = (id: string, completed: boolean) => {
-    startTransition(() => {
-        onCompleteTask(id, completed);
+    // Optimistic update
+    const originalTasks = tasks;
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === id
+          ? { ...task, completed, completedAt: completed ? new Date().toISOString() : null }
+          : task
+      )
+    );
+
+    startTransition(async () => {
+      try {
+        await completeTaskAction(id, completed);
+        // Let server action handle revalidation
+      } catch (error) {
+        setTasks(originalTasks);
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem updating your task.',
+        });
+      }
     });
   };
+
+  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => {
+    startTransition(async () => {
+      try {
+        await createTaskAction(taskData);
+        toast({
+          title: 'Task created!',
+          description: 'Your new task has been added.',
+        });
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem creating your task.',
+        });
+      }
+    });
+  }
+
+  const handleUpdateTask = (taskId: string, taskData: Partial<Omit<Task, 'id'>>) => {
+    startTransition(async () => {
+        try {
+            await updateTaskAction(taskId, taskData);
+            toast({ title: "Task updated!" });
+            setEditingTask(null);
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: 'Uh oh! Something went wrong.',
+                description: 'There was a problem updating your task.',
+            });
+        }
+    });
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    startTransition(async () => {
+        try {
+            await deleteTaskAction(taskId);
+            toast({ title: "Task deleted!" });
+            setEditingTask(null);
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: 'Uh oh! Something went wrong.',
+                description: 'There was a problem deleting your task.',
+            });
+        }
+    });
+  };
+
 
   const getCategoryName = (categoryId: string) => {
     return categories.find(c => c.id === categoryId)?.name ?? categoryId;
@@ -75,6 +151,7 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
   });
 
   return (
+    <>
     <Card className="h-full">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -97,11 +174,11 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                     <SelectItem value="High">High</SelectItem>
                   </SelectContent>
                 </Select>
-                <AddTaskDialog 
-                    categories={categories} 
+                <TaskFormDialog
+                    categories={categories}
                     projects={projects}
-                    onCreateTask={onCreateTask}
-                    isPending={isCreatingTask}
+                    onSave={handleCreateTask}
+                    isPending={isPending}
                 />
             </div>
         </div>
@@ -114,7 +191,7 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                     const Icon = energyIcons[task.energyLevel];
                     const isAligned = todayEnergy?.level === task.energyLevel;
                     const projectName = task.projectId ? getProjectName(task.projectId) : null;
-                    const isFocused = focusedTaskId === task.id;
+                    const isFocused = focusedTask?.id === task.id;
                     const priorityColor = task.priority ? priorityColors[task.priority] : 'text-gray-500';
 
                     return (
@@ -150,7 +227,6 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                                         <Tooltip>
                                             <TooltipTrigger className="flex items-center gap-1">
                                                 <Shield className={cn("size-3", priorityColor)} />
-                                                <span>{task.priority}</span>
                                             </TooltipTrigger>
                                             <TooltipContent>
                                                 <p>{task.priority}</p>
@@ -175,7 +251,7 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                                             variant="ghost"
                                             size="icon"
                                             className="h-8 w-8"
-                                            onClick={() => onFocusTask(task)}
+                                            onClick={() => setFocusedTask(task)}
                                         >
                                             <PlayCircle className="size-4" />
                                         </Button>
@@ -190,7 +266,7 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                                             variant="ghost"
                                             size="icon"
                                             className="h-8 w-8"
-                                            onClick={() => onEditTask(task)}
+                                            onClick={() => setEditingTask(task)}
                                         >
                                             <Edit className="size-4" />
                                         </Button>
@@ -212,5 +288,18 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
         </div>
       </CardContent>
     </Card>
+    {editingTask && (
+        <TaskFormDialog
+            task={editingTask}
+            categories={categories}
+            projects={projects}
+            open={!!editingTask}
+            onOpenChange={(isOpen) => !isOpen && setEditingTask(null)}
+            onSave={(data) => handleUpdateTask(editingTask.id, data)}
+            onDelete={handleDeleteTask}
+            isPending={isPending}
+        />
+    )}
+    </>
   );
 }

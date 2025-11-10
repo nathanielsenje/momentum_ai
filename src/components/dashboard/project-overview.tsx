@@ -16,27 +16,10 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { ProjectDialog } from './project-dialog';
-import { cn } from '@/lib/utils';
+import { cn, getProjectProgress } from '@/lib/utils';
 
 export function ProjectOverview({ projects, tasks }: { projects: Project[]; tasks: Task[] }) {
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
-
-  const getProjectProgress = (projectId: string) => {
-    const projectTasks = tasks.filter(t => t.projectId === projectId);
-    const totalTasks = projectTasks.length;
-    if (totalTasks === 0) return { percentage: 0, text: "No tasks", data: [], totalTasks: 0, completedTasks: 0 };
-    
-    const completedTasks = projectTasks.filter(t => t.completed).length;
-    const percentage = Math.round((completedTasks / totalTasks) * 100);
-    
-    return {
-      percentage,
-      text: `${completedTasks} / ${totalTasks}`,
-      data: [{ name: 'Progress', value: percentage, fill: "hsl(var(--primary))" }],
-      totalTasks,
-      completedTasks
-    };
-  }
 
   const getProjectTasks = (projectId: string) => {
     return tasks.filter(t => t.projectId === projectId);
@@ -69,7 +52,7 @@ export function ProjectOverview({ projects, tasks }: { projects: Project[]; task
                 >
                   <CarouselContent>
                     {projects.map(project => {
-                        const progress = getProjectProgress(project.id);
+                        const progress = getProjectProgress(project.id, tasks);
                         return (
                            <CarouselItem key={project.id} className="md:basis-1/2 lg:basis-1/3 flex flex-col">
                              <div className="p-1 flex-1 flex flex-col">

@@ -1,19 +1,17 @@
 'use server';
 /**
- * @fileOverview This file defines a Genkit flow for suggesting tasks based on the user's self-reported energy level.
+ * @fileOverview This file defines a function for suggesting tasks based on the user's self-reported energy level.
  *
  * It exports:
  * - `scoreAndSuggestTasks`: An async function to generate task suggestions based on energy level and other factors.
  * - `ScoreAndSuggestTasksInput`: The TypeScript type for the input schema.
- * - `ScoreAndSuggestTasksOutput`: The TypeScript type for the output schema.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { z } from 'zod';
 import { Project, Task } from '@/lib/types';
-import { isSameDay, parseISO, getDay } from 'date-fns';
+import { getDay } from 'date-fns';
 
-const ScoreAndSuggestTasksInputSchema = z.object({
+export const ScoreAndSuggestTasksInputSchema = z.object({
   energyLevel: z
     .enum(['Low', 'Medium', 'High'])
     .describe("The user's selected energy level (Low, Medium, or High)."),
@@ -23,34 +21,10 @@ const ScoreAndSuggestTasksInputSchema = z.object({
 });
 export type ScoreAndSuggestTasksInput = z.infer<typeof ScoreAndSuggestTasksInputSchema>;
 
-const ScoreAndSuggestTasksOutputSchema = z.object({
-  suggestedTasks: z
-    .array(z.custom<Task>())
-    .describe('An array of task objects from the user\'s list that are most appropriate for the given energy level and other factors, sorted by score.'),
-  microSuggestions: z
-    .array(z.string())
-    .describe('A list of small, actionable suggestions not from the user\'s task list, tailored to their energy level.'),
-  routineSuggestion: z
-    .string()
-    .optional()
-    .describe('A suggestion for a new recurring task based on detected user patterns.'),
-});
-export type ScoreAndSuggestTasksOutput = z.infer<typeof ScoreAndSuggestTasksOutputSchema>;
 
 export async function scoreAndSuggestTasks(
-  input: ScoreAndSuggestTasksInput
-): Promise<ScoreAndSuggestTasksOutput> {
-  return scoreAndSuggestTasksFlow(input);
-}
-
-const scoreAndSuggestTasksFlow = ai.defineFlow(
-  {
-    name: 'scoreAndSuggestTasksFlow',
-    inputSchema: ScoreAndSuggestTasksInputSchema,
-    outputSchema: ScoreAndSuggestTasksOutputSchema,
-  },
-  async ({tasks, projects, energyLevel, completedTasks}) => {
-
+  {tasks, projects, energyLevel, completedTasks}: ScoreAndSuggestTasksInput
+) {
     const relevantCompletedTasks = completedTasks.filter(task => task.energyLevel === energyLevel);
     
     let preferredFocus: string | null = null;
@@ -123,8 +97,6 @@ const scoreAndSuggestTasksFlow = ai.defineFlow(
 
     return {
         suggestedTasks: sortedTasks.slice(0, 3), // Return top 3 suggestions
-        microSuggestions: [],
         routineSuggestion
     }
-  }
-);
+}

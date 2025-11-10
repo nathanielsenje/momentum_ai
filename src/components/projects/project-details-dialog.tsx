@@ -40,10 +40,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { updateProjectAction, deleteProjectAction } from '@/app/actions';
-import type { Project, Task } from '@/lib/types';
+import type { Project, ProjectPriority, Task } from '@/lib/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const projectFormSchema = z.object({
   name: z.string().min(2, 'Project name must be at least 2 characters.'),
+  priority: z.enum(['Low', 'Medium', 'High']),
 });
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
@@ -52,12 +54,13 @@ interface ProjectDetailsDialogProps {
   tasks: Task[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDelete: (projectId: string) => void;
+  onUpdate: (projectId: string, data: Partial<Project>) => void;
+  isPending: boolean;
 }
 
-export function ProjectDetailsDialog({ project, tasks, open, onOpenChange }: ProjectDetailsDialogProps) {
+export function ProjectDetailsDialog({ project, tasks, open, onOpenChange, onDelete, onUpdate, isPending }: ProjectDetailsDialogProps) {
   const [isEditing, setIsEditing] = React.useState(false);
-  const [isDeletePending, startDeleteTransition] = useTransition();
-  const [isUpdatePending, startUpdateTransition] = useTransition();
   const { toast } = useToast();
 
   const completedTasks = tasks.filter(t => t.completed);
@@ -65,47 +68,33 @@ export function ProjectDetailsDialog({ project, tasks, open, onOpenChange }: Pro
 
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
-    defaultValues: { name: project.name },
+    defaultValues: { name: project.name, priority: project.priority || 'Medium' },
   });
 
   const handleUpdateProject = (data: ProjectFormValues) => {
-    startUpdateTransition(async () => {
-      try {
-        await updateProjectAction(project.id, { name: data.name });
-        toast({ title: 'Project updated!' });
-        setIsEditing(false);
-        onOpenChange(false);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error updating project',
-          description: 'Could not save your changes. Please try again.',
-        });
-      }
-    });
+    onUpdate(project.id, data);
+    setIsEditing(false);
   };
 
   const handleDeleteProject = () => {
-    startDeleteTransition(async () => {
-      try {
-        await deleteProjectAction(project.id);
-        toast({ title: 'Project deleted' });
-        onOpenChange(false);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error deleting project',
-          description: 'Could not delete the project. Please try again.',
-        });
-      }
-    });
+    onDelete(project.id);
   };
 
+  React.useEffect(() => {
+    if(project) {
+        form.reset({ name: project.name, priority: project.priority || 'Medium' });
+    }
+  }, [project, form]);
+  
+  // Close editor if dialog closes
+  React.useEffect(() => {
+    if (!open) {
+      setIsEditing(false);
+    }
+  }, [open]);
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      onOpenChange(isOpen);
-      if (!isOpen) setIsEditing(false);
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -135,10 +124,32 @@ export function ProjectDetailsDialog({ project, tasks, open, onOpenChange }: Pro
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                       <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="High">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <DialogFooter>
                 <Button type="button" variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
-                <Button type="submit" disabled={isUpdatePending}>
-                  {isUpdatePending ? 'Saving...' : 'Save Changes'}
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? 'Saving...' : 'Save Changes'}
                 </Button>
               </DialogFooter>
             </form>
@@ -153,8 +164,8 @@ export function ProjectDetailsDialog({ project, tasks, open, onOpenChange }: Pro
                     <div className="space-y-2">
                       {openTasks.map(task => (
                         <div key={task.id} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
-                          <Checkbox id={`task-${task.id}`} checked={false} disabled />
-                          <label htmlFor={`task-${task.id}`} className="text-sm font-medium">{task.name}</label>
+                          <Checkbox id={`task-detail-${task.id}`} checked={false} disabled />
+                          <label htmlFor={`task-detail-${task.id}`} className="text-sm font-medium">{task.name}</label>
                         </div>
                       ))}
                     </div>
@@ -166,9 +177,9 @@ export function ProjectDetailsDialog({ project, tasks, open, onOpenChange }: Pro
                     <div className="space-y-2">
                       {completedTasks.map(task => (
                         <div key={task.id} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
-                          <Checkbox id={`task-${task.id}`} checked={true} disabled />
+                          <Checkbox id={`task-detail-${task.id}`} checked={true} disabled />
                           <label
-                            htmlFor={`task-${task.id}`}
+                            htmlFor={`task-detail-${task.id}`}
                             className="text-sm font-medium text-muted-foreground line-through"
                           >
                             {task.name}
@@ -187,38 +198,36 @@ export function ProjectDetailsDialog({ project, tasks, open, onOpenChange }: Pro
             </ScrollArea>
 
             <DialogFooter className="justify-between">
-              <div>
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                            <Trash2 className="mr-2" /> Delete Project
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete this project and all of its tasks.
-                        </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleDeleteProject}
-                            disabled={isDeletePending}
-                        >
-                            {isDeletePending ? "Deleting..." : "Delete"}
-                        </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-              </div>
+              <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                      <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete this project and all associated tasks.
+                      </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                          onClick={handleDeleteProject}
+                          disabled={isPending}
+                      >
+                          {isPending ? "Deleting..." : "Delete"}
+                      </AlertDialogAction>
+                      </AlertDialogFooter>
+                  </AlertDialogContent>
+              </AlertDialog>
               <div className="flex gap-2">
                  <DialogClose asChild>
                     <Button type="button" variant="secondary">Close</Button>
                  </DialogClose>
                  <Button size="sm" onClick={() => setIsEditing(true)}>
-                    <Edit className="mr-2" /> Edit Project
+                    <Edit className="mr-2 h-4 w-4" /> Edit
                 </Button>
               </div>
             </DialogFooter>

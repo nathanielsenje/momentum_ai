@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { SuggestedTasks } from './suggested-tasks';
-import type { ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
+import { ScoreAndSuggestTasksOutput } from '@/app/actions';
 import type { EnergyLevel } from '@/lib/types';
 
 interface SuggestionsDialogProps {

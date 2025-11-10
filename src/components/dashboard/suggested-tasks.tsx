@@ -1,7 +1,7 @@
-import { CheckCircle, Sparkles } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import type { EnergyLevel } from '@/lib/types';
 import { Badge } from '../ui/badge';
-import type { ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
+import type { ScoreAndSuggestTasksOutput } from '@/app/actions';
 
 interface SuggestedTasksProps {
   suggestions: ScoreAndSuggestTasksOutput;
@@ -43,7 +43,7 @@ export function SuggestedTasks({ suggestions, energyLevel }: SuggestedTasksProps
           </div>
         ) : (
           <div className="text-center text-sm text-muted-foreground py-8">
-            <p>{energyLevel ? 'No specific tasks to suggest.' : 'Waiting for energy input...'}</p>
+            <p>{energyLevel ? 'No specific tasks to suggest from your list.' : 'Waiting for energy input...'}</p>
           </div>
         )}
       </div>

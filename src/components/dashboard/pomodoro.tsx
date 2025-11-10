@@ -4,47 +4,48 @@ import * as React from 'react';
 import { Play, Pause, RotateCcw, Target } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Task } from '@/lib/types';
+import { PomodoroContext } from './pomodoro-provider';
 
-export function Pomodoro({ task }: { task: Task | null }) {
+export function Pomodoro() {
+  const { focusedTask } = React.useContext(PomodoroContext);
   const [minutes, setMinutes] = React.useState(25);
   const [seconds, setSeconds] = React.useState(0);
   const [isActive, setIsActive] = React.useState(false);
   const [sessionType, setSessionType] = React.useState<'Focus' | 'Break'>('Focus');
+  const audioRef = React.useRef<HTMLAudioElement>(null);
 
   React.useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (isActive) {
       interval = setInterval(() => {
         if (seconds > 0) {
-          setSeconds((seconds) => seconds - 1);
-        }
-        if (seconds === 0) {
-          if (minutes === 0) {
-            clearInterval(interval!);
-            // TODO: Add sound notification and feedback prompt
-            setIsActive(false);
-            // Basic logic to switch between focus and break
-            if(sessionType === 'Focus') {
-                setSessionType('Break');
-                setMinutes(5);
-            } else {
-                setSessionType('Focus');
-                setMinutes(25);
-            }
+          setSeconds((s) => s - 1);
+        } else if (minutes > 0) {
+          setMinutes((m) => m - 1);
+          setSeconds(59);
+        } else {
+          // Timer finished
+          if (audioRef.current) {
+            audioRef.current.play();
+          }
+          setIsActive(false);
+          if (sessionType === 'Focus') {
+            setSessionType('Break');
+            setMinutes(5);
           } else {
-            setMinutes((minutes) => minutes - 1);
-            setSeconds(59);
+            setSessionType('Focus');
+            setMinutes(25);
           }
         }
       }, 1000);
-    } else if (!isActive && seconds !== 0) {
-      clearInterval(interval!);
     }
-    return () => clearInterval(interval!);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [isActive, seconds, minutes, sessionType]);
 
   const toggle = () => {
+    if (!focusedTask) return;
     setIsActive(!isActive);
   };
 
@@ -60,9 +61,9 @@ export function Pomodoro({ task }: { task: Task | null }) {
       <CardHeader>
         <CardTitle className="text-xl">Pomodoro Timer</CardTitle>
         <CardDescription className="h-5">
-            {task ? (
+            {focusedTask ? (
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Target className="size-3" /> Focusing on: {task.name}
+                    <Target className="size-3" /> Focusing on: {focusedTask.name}
                 </span>
             ) : "Select a task to focus on."}
         </CardDescription>
@@ -75,7 +76,7 @@ export function Pomodoro({ task }: { task: Task | null }) {
             </div>
         </div>
         <div className="flex gap-2">
-          <Button onClick={toggle} size="lg" variant={isActive ? 'secondary' : 'default'} disabled={!task}>
+          <Button onClick={toggle} size="lg" variant={isActive ? 'secondary' : 'default'} disabled={!focusedTask}>
             {isActive ? <Pause /> : <Play />}
             {isActive ? 'Pause' : 'Start'}
           </Button>
@@ -84,6 +85,7 @@ export function Pomodoro({ task }: { task: Task | null }) {
             Reset
           </Button>
         </div>
+        <audio ref={audioRef} src="/notification.mp3" preload="auto" />
       </CardContent>
     </Card>
   );

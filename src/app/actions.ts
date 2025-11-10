@@ -11,7 +11,6 @@ import {
   getTodayEnergy,
   getLatestMomentum,
   saveMomentumScore,
-  getCategories,
   addProject,
   getProjects,
   updateProject,
@@ -21,7 +20,7 @@ import {
   updateTodaysReport,
 } from '@/lib/data';
 import type { DailyReport, EnergyLevel, Project, RecurringTask, Task } from '@/lib/types';
-import { scoreAndSuggestTasks, ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
+import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow, ScoreAndSuggestTasksInput } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { calculateDailyMomentumScore } from '@/ai/flows/calculate-daily-momentum-score';
 import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
 import { subDays, format, isSameDay, parseISO } from 'date-fns';
@@ -36,14 +35,16 @@ export async function createTaskAction(data: Omit<Task, 'id'| 'completed' | 'com
   revalidatePath('/');
   revalidatePath('/projects');
   revalidatePath('/reports');
+  revalidatePath('/weekly-planner');
   return newTask;
 }
 
-export async function updateTaskAction(taskId: string, data: Partial<Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>>) {
+export async function updateTaskAction(taskId: string, data: Partial<Omit<Task, 'id'>>) {
   const updatedTask = await updateTask(taskId, data);
   revalidatePath('/');
   revalidatePath('/projects');
   revalidatePath('/reports');
+  revalidatePath('/weekly-planner');
   return updatedTask;
 }
 
@@ -52,6 +53,7 @@ export async function deleteTaskAction(taskId: string) {
     revalidatePath('/');
     revalidatePath('/projects');
     revalidatePath('/reports');
+    revalidatePath('/weekly-planner');
 }
 
 
@@ -105,19 +107,12 @@ export async function completeTaskAction(taskId: string, completed: boolean) {
   revalidatePath('/analytics');
   revalidatePath('/projects');
   revalidatePath('/reports');
+  revalidatePath('/weekly-planner');
 }
 
-export async function getSuggestedTasks(energyLevel: EnergyLevel): Promise<ScoreAndSuggestTasksOutput> {
-  const [tasks, projects] = await Promise.all([getTasks(), getProjects()]);
-  const completedTasks = tasks.filter(t => t.completed);
-
-  const suggestions = await scoreAndSuggestTasks({
-    energyLevel,
-    tasks: tasks,
-    projects: projects,
-    completedTasks: completedTasks,
-  });
-
+export type ScoreAndSuggestTasksOutput = Awaited<ReturnType<typeof getSuggestedTasks>>;
+export async function getSuggestedTasks(input: ScoreAndSuggestTasksInput) {
+  const suggestions = await scoreAndSuggestTasksFlow(input);
   return suggestions;
 }
 
@@ -136,15 +131,17 @@ export async function getFlowAlignmentReport() {
 }
 
 export async function createProjectAction(name: string) {
-    await addProject({ name, priority: 'Medium' });
+    const newProject = await addProject({ name, priority: 'Medium' });
     revalidatePath('/projects');
     revalidatePath('/');
+    return newProject;
 }
 
 export async function updateProjectAction(projectId: string, updates: Partial<Project>) {
-    await updateProject(projectId, updates);
+    const updatedProject = await updateProject(projectId, updates);
     revalidatePath('/projects');
     revalidatePath('/');
+    return updatedProject;
 }
 
 export async function deleteProjectAction(projectId: string) {
