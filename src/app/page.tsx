@@ -1,3 +1,6 @@
+'use client';
+
+import * as React from 'react';
 import {
   getTasks,
   getTodayEnergy,
@@ -12,22 +15,69 @@ import { SuggestedTasks } from '@/components/dashboard/suggested-tasks';
 import { TaskList } from '@/components/dashboard/task-list';
 import { Pomodoro } from '@/components/dashboard/pomodoro';
 import { ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
+import { Task, EnergyLog, MomentumScore, Category, Project, EnergyLevel } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default async function DashboardPage() {
-  const [tasks, todayEnergy, latestMomentum, categories, projects] = await Promise.all([
-    getTasks(),
-    getTodayEnergy(),
-    getLatestMomentum(),
-    getCategories(),
-    getProjects(),
-  ]);
-
-  let suggestions: ScoreAndSuggestTasksOutput = {
+export default function DashboardPage() {
+  const [loading, setLoading] = React.useState(true);
+  const [tasks, setTasks] = React.useState<Task[]>([]);
+  const [todayEnergy, setTodayEnergy] = React.useState<EnergyLog | undefined>();
+  const [latestMomentum, setLatestMomentum] = React.useState<MomentumScore | undefined>();
+  const [categories, setCategories] = React.useState<Category[]>([]);
+  const [projects, setProjects] = React.useState<Project[]>([]);
+  const [suggestions, setSuggestions] = React.useState<ScoreAndSuggestTasksOutput>({
     suggestedTasks: [],
     microSuggestions: [],
-  };
-  if (todayEnergy) {
-    suggestions = await getSuggestedTasks(todayEnergy.level);
+  });
+  const [focusedTask, setFocusedTask] = React.useState<Task | null>(null);
+
+  React.useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const [
+        tasksData,
+        todayEnergyData,
+        latestMomentumData,
+        categoriesData,
+        projectsData,
+      ] = await Promise.all([
+        getTasks(),
+        getTodayEnergy(),
+        getLatestMomentum(),
+        getCategories(),
+        getProjects(),
+      ]);
+
+      setTasks(tasksData);
+      setTodayEnergy(todayEnergyData);
+      setLatestMomentum(latestMomentumData);
+      setCategories(categoriesData);
+      setProjects(projectsData);
+      
+      if (todayEnergyData) {
+        const suggestionData = await getSuggestedTasks(todayEnergyData.level);
+        setSuggestions(suggestionData);
+      }
+      setLoading(false);
+    }
+    fetchData();
+  }, [todayEnergy?.level]);
+
+  if (loading) {
+      return (
+          <div className="flex flex-col gap-4">
+              <Skeleton className="h-8 w-1/3" />
+              <div className="grid gap-4 md:grid-cols-2">
+                  <Skeleton className="h-48" />
+                  <Skeleton className="h-48" />
+              </div>
+              <Skeleton className="h-48" />
+              <div className="grid gap-4 lg:grid-cols-3">
+                  <Skeleton className="h-32 lg:col-span-1" />
+                  <Skeleton className="h-64 lg:col-span-2" />
+              </div>
+          </div>
+      )
   }
 
   return (
@@ -36,25 +86,29 @@ export default async function DashboardPage() {
         Dashboard
       </h1>
       
-      {/* Tier 1: Emotional State & Motivation */}
       <div className="grid gap-4 md:grid-cols-2">
         <MomentumCard latestMomentum={latestMomentum} />
         <EnergyInput todayEnergy={todayEnergy} />
       </div>
 
-      {/* Tier 2: Action Zone */}
       <SuggestedTasks
         suggestions={suggestions}
         energyLevel={todayEnergy?.level}
       />
 
-      {/* Tier 3: Deep Work Tools */}
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-1">
-            <Pomodoro />
+            <Pomodoro task={focusedTask} />
         </div>
         <div className="lg:col-span-2">
-            <TaskList tasks={tasks} categories={categories} todayEnergy={todayEnergy} projects={projects} />
+            <TaskList 
+              tasks={tasks} 
+              categories={categories} 
+              todayEnergy={todayEnergy} 
+              projects={projects}
+              onFocusTask={setFocusedTask}
+              focusedTaskId={focusedTask?.id}
+            />
         </div>
       </div>
     </div>

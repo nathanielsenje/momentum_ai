@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { AddTaskDialog } from './add-task-dialog';
 import type { Task, Category, EnergyLevel, EnergyLog, Project } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Zap, ZapOff, BatteryMedium, Target, ListTodo, Folder } from 'lucide-react';
+import { Zap, ZapOff, BatteryMedium, Target, ListTodo, Folder, PlayCircle } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -18,6 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
@@ -26,7 +32,16 @@ const energyIcons: Record<EnergyLevel, React.ElementType> = {
   High: Zap,
 };
 
-export function TaskList({ tasks, categories, todayEnergy, projects }: { tasks: Task[]; categories: Category[], todayEnergy?: EnergyLog, projects: Project[] }) {
+interface TaskListProps {
+    tasks: Task[];
+    categories: Category[];
+    todayEnergy?: EnergyLog;
+    projects: Project[];
+    onFocusTask: (task: Task) => void;
+    focusedTaskId: string | null;
+}
+
+export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask, focusedTaskId }: TaskListProps) {
   const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = React.useState<EnergyLevel | 'all'>('all');
 
@@ -81,14 +96,17 @@ export function TaskList({ tasks, categories, todayEnergy, projects }: { tasks: 
       <CardContent>
         <div className="space-y-3">
             {filteredTasks.length > 0 ? (
-                filteredTasks.map(task => {
+                <TooltipProvider>
+                {filteredTasks.map(task => {
                     const Icon = energyIcons[task.energyLevel];
                     const isAligned = todayEnergy?.level === task.energyLevel;
                     const projectName = task.projectId ? getProjectName(task.projectId) : null;
+                    const isFocused = focusedTaskId === task.id;
                     return (
                         <div key={task.id} className={cn(
-                            "flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors",
-                            isAligned && "bg-primary/10 border border-primary/30"
+                            "flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors relative",
+                            isAligned && !isFocused && "bg-primary/10 border border-primary/30",
+                            isFocused && "bg-accent/20 border border-accent"
                         )}>
                             <Checkbox
                                 id={`task-${task.id}`}
@@ -124,9 +142,25 @@ export function TaskList({ tasks, categories, todayEnergy, projects }: { tasks: 
                                      </div>
                                  )}
                             </div>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute top-1/2 right-2 -translate-y-1/2 h-8 w-8"
+                                        onClick={() => onFocusTask(task)}
+                                    >
+                                        <PlayCircle className="size-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Focus on this task</p>
+                                </TooltipContent>
+                            </Tooltip>
                         </div>
                     );
-                })
+                })}
+                </TooltipProvider>
             ) : (
                 <div className="text-center text-sm text-muted-foreground py-8">
                     <p>All tasks for this filter are complete. Well done!</p>

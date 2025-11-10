@@ -1,11 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { Play, Pause, RotateCcw } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Play, Pause, RotateCcw, Target } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Task } from '@/lib/types';
 
-export function Pomodoro() {
+export function Pomodoro({ task }: { task: Task | null }) {
   const [minutes, setMinutes] = React.useState(25);
   const [seconds, setSeconds] = React.useState(0);
   const [isActive, setIsActive] = React.useState(false);
@@ -20,7 +21,8 @@ export function Pomodoro() {
         if (seconds === 0) {
           if (minutes === 0) {
             clearInterval(interval!);
-            // TODO: Add sound notification
+            // TODO: Add sound notification and feedback prompt
+            setIsActive(false);
           } else {
             setMinutes((minutes) => minutes - 1);
             setSeconds(59);
@@ -47,13 +49,20 @@ export function Pomodoro() {
     <Card>
       <CardHeader>
         <CardTitle className="text-xl">Pomodoro Timer</CardTitle>
+        <CardDescription className="h-5">
+            {task ? (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Target className="size-3" /> Focusing on: {task.name}
+                </span>
+            ) : "Select a task to focus on."}
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex items-center justify-between">
         <div className="text-5xl font-bold font-mono text-primary">
           {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
         </div>
         <div className="flex gap-2">
-          <Button onClick={toggle} size="icon" variant={isActive ? 'secondary' : 'default'}>
+          <Button onClick={toggle} size="icon" variant={isActive ? 'secondary' : 'default'} disabled={!task}>
             {isActive ? <Pause /> : <Play />}
           </Button>
           <Button onClick={reset} size="icon" variant="outline">

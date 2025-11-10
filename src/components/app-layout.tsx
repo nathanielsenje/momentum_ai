@@ -14,8 +14,10 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
   useSidebar,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
+import { ThemeSwitcher } from '@/components/theme-switcher';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -76,6 +78,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
+        <SidebarFooter>
+            <ThemeSwitcher />
+        </SidebarFooter>
       </Sidebar>
       <SidebarInset className="p-4 md:p-6 lg:p-8">
         <header className="flex items-center justify-between md:hidden mb-4">
