@@ -40,16 +40,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   
   return (
     <>
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarRail />
-        <SidebarHeader>
+        <SidebarHeader className="pt-6">
           <div className="flex items-center gap-2">
             <Logo className="size-8 text-primary" />
             <h1 className="text-xl font-semibold font-headline">Momentum AI</h1>
           </div>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu>
+          <SidebarMenu className="mt-4">
             <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
