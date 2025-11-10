@@ -47,32 +47,28 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/'}
-                tooltip="Dashboard"
-              >
-                <Link href="/">
-                  <React.Fragment>
-                    <Gauge />
-                    <span>Dashboard</span>
-                  </React.Fragment>
+                <Link href="/" legacyBehavior passHref>
+                  <SidebarMenuButton
+                    isActive={pathname === '/'}
+                    tooltip="Dashboard"
+                    asChild={false}
+                  >
+                      <Gauge />
+                      <span>Dashboard</span>
+                  </SidebarMenuButton>
                 </Link>
-              </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/analytics'}
-                tooltip="Analytics"
-              >
-                <Link href="/analytics">
-                  <React.Fragment>
-                    <Activity />
-                    <span>Analytics</span>
-                  </React.Fragment>
+                <Link href="/analytics" legacyBehavior passHref>
+                  <SidebarMenuButton
+                    isActive={pathname === '/analytics'}
+                    tooltip="Analytics"
+                    asChild={false}
+                  >
+                      <Activity />
+                      <span>Analytics</span>
+                  </SidebarMenuButton>
                 </Link>
-              </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
@@ -83,7 +79,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Logo className="size-7 text-primary" />
             <span className="font-semibold font-headline">Momentum AI</span>
           </Link>
-          <SidebarTrigger asChild>
+          <SidebarTrigger>
              <Button variant="ghost" size="icon">
                 <PanelLeft />
              </Button>
