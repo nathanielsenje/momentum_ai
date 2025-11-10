@@ -2,10 +2,10 @@
   "2025-11-10": {
     "date": "2025-11-10",
     "startTime": "2025-11-10T09:00:00.000Z",
-    "endTime": null,
+    "endTime": "2025-11-10T11:59:18.330Z",
     "generatedReport": null,
-    "goals": 7,
+    "goals": 6,
     "completed": 4,
-    "inProgress": 3
+    "inProgress": 2
   }
 }

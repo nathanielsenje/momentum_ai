@@ -9,7 +9,7 @@ interface SuggestedTasksProps {
 }
 
 export function SuggestedTasks({ suggestions, energyLevel }: SuggestedTasksProps) {
-    const hasSuggestions = suggestions.suggestedTasks.length > 0 || suggestions.microSuggestions.length > 0;
+    const hasSuggestions = suggestions.suggestedTasks.length > 0;
 
   return (
       <div>
@@ -40,21 +40,6 @@ export function SuggestedTasks({ suggestions, energyLevel }: SuggestedTasksProps
                     </ul>
                 </div>
             )}
-
-            {suggestions.microSuggestions.length > 0 && (
-                 <div>
-                    <h3 className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Quick Ideas</h3>
-                    <ul className="space-y-2">
-                        {suggestions.microSuggestions.map((suggestion, index) => (
-                            <li key={`micro-${index}`} className="flex items-center gap-3 p-2 text-sm rounded-md bg-secondary/30">
-                                <Sparkles className="size-4 shrink-0 text-accent" />
-                                <span>{suggestion}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
           </div>
         ) : (
           <div className="text-center text-sm text-muted-foreground py-8">

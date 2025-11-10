@@ -43,14 +43,6 @@ export async function scoreAndSuggestTasks(
   return scoreAndSuggestTasksFlow(input);
 }
 
-const microSuggestionsPrompt = ai.definePrompt({
-    name: 'microSuggestionsPrompt',
-    input: { schema: z.object({ energyLevel: z.enum(['Low', 'Medium', 'High']) }) },
-    output: { schema: z.object({ suggestions: z.array(z.string()) }) },
-    prompt: `Based on the user's energy level of {{{energyLevel}}}, generate 2-3 short, actionable "micro-suggestions" that are not typical tasks. For low energy, suggest restorative activities (e.g., 'Take a short walk', 'Stretch for 5 minutes'). For medium energy, suggest preparatory tasks (e.g., 'Review tomorrow\'s calendar', 'Tidy up your workspace'). For high energy, suggest something to leverage that momentum (e.g., 'Brainstorm one big idea', 'Set a goal for the week').`,
-});
-
-
 const scoreAndSuggestTasksFlow = ai.defineFlow(
   {
     name: 'scoreAndSuggestTasksFlow',
@@ -117,10 +109,6 @@ const scoreAndSuggestTasksFlow = ai.defineFlow(
 
     const sortedTasks = scoredTasks.sort((a, b) => (b.score || 0) - (a.score || 0));
 
-    // Generate micro-suggestions
-    const microSuggestionsResult = await microSuggestionsPrompt({ energyLevel });
-    const microSuggestions = microSuggestionsResult.output?.suggestions || [];
-
     // Check for routine patterns
     let routineSuggestion: string | undefined = undefined;
     const today = new Date();
@@ -135,7 +123,7 @@ const scoreAndSuggestTasksFlow = ai.defineFlow(
 
     return {
         suggestedTasks: sortedTasks.slice(0, 3), // Return top 3 suggestions
-        microSuggestions,
+        microSuggestions: [],
         routineSuggestion
     }
   }
