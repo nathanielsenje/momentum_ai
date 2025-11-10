@@ -17,6 +17,7 @@ import { ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-en
 import { Task, EnergyLog, MomentumScore, Category, Project, EnergyLevel } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { ProjectOverview } from '@/components/dashboard/project-overview';
 
 export default function DashboardPage() {
   const [loading, setLoading] = React.useState(true);
@@ -146,6 +147,7 @@ export default function DashboardPage() {
                   <Skeleton className="h-64" />
               </div>
               <Skeleton className="h-48" />
+              <Skeleton className="h-64" />
           </div>
       )
   }
@@ -170,6 +172,8 @@ export default function DashboardPage() {
             />
         </div>
       </div>
+      
+      <ProjectOverview projects={projects} tasks={tasks} />
 
        <MomentumCard 
           latestMomentum={latestMomentum} 

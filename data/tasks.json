@@ -35,5 +35,33 @@
     "completed": true,
     "completedAt": "2025-11-10T10:10:37.931Z",
     "createdAt": "2025-11-10T10:08:11.609Z"
+  },
+  {
+    "name": "Write proposal draft",
+    "category": "personal",
+    "energyLevel": "High",
+    "projectId": "2",
+    "deadline": "2025-11-18T21:00:00.000Z",
+    "effort": 3,
+    "focusType": "Analytical",
+    "priority": "Urgent & Not Important",
+    "id": "1762771127478",
+    "completed": false,
+    "completedAt": null,
+    "createdAt": "2025-11-10T10:38:47.478Z"
+  },
+  {
+    "name": "Call Social Media Team",
+    "category": "personal",
+    "energyLevel": "High",
+    "projectId": "2",
+    "deadline": "2025-12-03T21:00:00.000Z",
+    "effort": 3,
+    "focusType": "Physical",
+    "priority": "Urgent & Important",
+    "id": "1762771158956",
+    "completed": false,
+    "completedAt": null,
+    "createdAt": "2025-11-10T10:39:18.956Z"
   }
 ]
