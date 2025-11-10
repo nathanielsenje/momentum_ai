@@ -9,7 +9,7 @@ import {
   getCategories,
   getProjects,
 } from '@/lib/data';
-import { createTaskAction, getSuggestedTasks } from '@/app/actions';
+import { createTaskAction, getSuggestedTasks, completeTaskAction } from '@/app/actions';
 import { EnergyInput } from '@/components/dashboard/energy-input';
 import { MomentumCard } from '@/components/dashboard/momentum-card';
 import { SuggestedTasks } from '@/components/dashboard/suggested-tasks';
@@ -87,20 +87,56 @@ export default function DashboardPage() {
     });
   }
 
+  const handleCompleteTask = (taskId: string, completed: boolean) => {
+    // Optimistically update the UI
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === taskId
+          ? { ...task, completed, completedAt: completed ? new Date().toISOString() : null }
+          : task
+      )
+    );
+
+    startTransition(async () => {
+      try {
+        await completeTaskAction(taskId, completed);
+        // Re-fetch momentum score after completion
+        if (completed) {
+            const latestMomentumData = await getLatestMomentum();
+            setLatestMomentum(latestMomentumData);
+        }
+      } catch (error) {
+        // Revert the optimistic update if there was an error
+        setTasks(prevTasks =>
+          prevTasks.map(task =>
+            task.id === taskId
+              ? { ...task, completed: !completed, completedAt: !completed ? new Date().toISOString() : null }
+              : task
+          )
+        );
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem updating your task.',
+        });
+      }
+    });
+  };
+
 
   if (loading) {
       return (
           <div className="flex flex-col gap-4">
               <Skeleton className="h-8 w-1/3" />
+              <div className="grid gap-4 lg:grid-cols-3">
+                  <Skeleton className="h-32 lg:col-span-1" />
+                  <Skeleton className="h-64 lg:col-span-2" />
+              </div>
               <div className="grid gap-4 md:grid-cols-2">
                   <Skeleton className="h-48" />
                   <Skeleton className="h-48" />
               </div>
               <Skeleton className="h-48" />
-              <div className="grid gap-4 lg:grid-cols-3">
-                  <Skeleton className="h-32 lg:col-span-1" />
-                  <Skeleton className="h-64 lg:col-span-2" />
-              </div>
           </div>
       )
   }
@@ -124,6 +160,7 @@ export default function DashboardPage() {
               onFocusTask={setFocusedTask}
               focusedTaskId={focusedTask?.id}
               onCreateTask={handleCreateTask}
+              onCompleteTask={handleCompleteTask}
               isCreatingTask={isPending}
             />
         </div>

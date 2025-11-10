@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { useTransition } from 'react';
-import { completeTaskAction } from '@/app/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -40,16 +39,17 @@ interface TaskListProps {
     onFocusTask: (task: Task) => void;
     focusedTaskId: string | null;
     onCreateTask: (data: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => void;
+    onCompleteTask: (taskId: string, completed: boolean) => void;
     isCreatingTask: boolean;
 }
 
-export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask, focusedTaskId, onCreateTask, isCreatingTask }: TaskListProps) {
+export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask, focusedTaskId, onCreateTask, onCompleteTask, isCreatingTask }: TaskListProps) {
   const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = React.useState<EnergyLevel | 'all'>('all');
 
   const handleComplete = (id: string, completed: boolean) => {
     startTransition(() => {
-      completeTaskAction(id, completed);
+        onCompleteTask(id, completed);
     });
   };
 
@@ -66,7 +66,10 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
     return task.energyLevel === filter && !task.completed;
   });
 
-  const completedTasks = tasks.filter(task => task.completed);
+  const completedTasks = tasks.filter(task => task.completed).sort((a, b) => {
+      if (!a.completedAt || !b.completedAt) return 0;
+      return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+  });
 
   return (
     <Card className="h-full">
