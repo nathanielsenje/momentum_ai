@@ -9,7 +9,7 @@ import {
   getCategories,
   getProjects,
 } from '@/lib/data';
-import { createTaskAction, getSuggestedTasks, completeTaskAction } from '@/app/actions';
+import { createTaskAction, getSuggestedTasks, completeTaskAction, setEnergyLevelAction } from '@/app/actions';
 import { MomentumCard } from '@/components/dashboard/momentum-card';
 import { TaskList } from '@/components/dashboard/task-list';
 import { Pomodoro } from '@/components/dashboard/pomodoro';
@@ -35,6 +35,10 @@ export default function DashboardPage() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
+  const handleEnergyChange = (newEnergy: EnergyLog) => {
+      setTodayEnergy(newEnergy);
+  }
+
   React.useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -59,12 +63,23 @@ export default function DashboardPage() {
       setProjects(projectsData);
       
       if (todayEnergyData) {
-        const suggestionData = await getSuggestedTasks(todayEnergyData.level);
-        setSuggestions(suggestionData);
+        startTransition(async () => {
+            const suggestionData = await getSuggestedTasks(todayEnergyData.level);
+            setSuggestions(suggestionData);
+        });
       }
       setLoading(false);
     }
     fetchData();
+  }, []);
+
+  React.useEffect(() => {
+    if (todayEnergy) {
+      startTransition(async () => {
+        const suggestionData = await getSuggestedTasks(todayEnergy.level);
+        setSuggestions(suggestionData);
+      });
+    }
   }, [todayEnergy?.level]);
 
   const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => {
@@ -126,13 +141,9 @@ export default function DashboardPage() {
   if (loading) {
       return (
           <div className="flex flex-col gap-4">
-              <Skeleton className="h-8 w-1/3" />
               <div className="grid gap-4 lg:grid-cols-2">
                   <Skeleton className="h-64" />
                   <Skeleton className="h-64" />
-              </div>
-              <div className="grid gap-4 md:grid-cols-1">
-                  <Skeleton className="h-48" />
               </div>
               <Skeleton className="h-48" />
           </div>
@@ -164,6 +175,7 @@ export default function DashboardPage() {
           latestMomentum={latestMomentum} 
           routineSuggestion={suggestions.routineSuggestion} 
           todayEnergy={todayEnergy}
+          onEnergyChange={handleEnergyChange}
           suggestions={suggestions}
       />
     </div>

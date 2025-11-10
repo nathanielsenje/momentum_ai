@@ -12,9 +12,10 @@ interface MomentumCardProps {
     routineSuggestion?: string;
     todayEnergy?: EnergyLog;
     suggestions?: ScoreAndSuggestTasksOutput;
+    onEnergyChange: (newEnergy: EnergyLog) => void;
 }
 
-export function MomentumCard({ latestMomentum, routineSuggestion, todayEnergy, suggestions }: MomentumCardProps) {
+export function MomentumCard({ latestMomentum, routineSuggestion, todayEnergy, suggestions, onEnergyChange }: MomentumCardProps) {
   const score = latestMomentum?.score ?? 0;
   const streak = latestMomentum?.streak ?? 0;
   
@@ -58,7 +59,7 @@ export function MomentumCard({ latestMomentum, routineSuggestion, todayEnergy, s
         </div>
         
         <div className="md:col-span-2">
-            <EnergyInput todayEnergy={todayEnergy} />
+            <EnergyInput todayEnergy={todayEnergy} onEnergyChange={onEnergyChange} />
         </div>
 
         {latestMomentum?.summary && (
