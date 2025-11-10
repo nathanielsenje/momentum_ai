@@ -21,7 +21,7 @@ export function MomentumCard({ latestMomentum, routineSuggestion }: MomentumCard
         </CardTitle>
         <CardDescription>Your task-energy alignment score.</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2">
+      <CardContent className="flex flex-col gap-4">
         <div className="flex items-center justify-around text-center">
             <div>
                 <p className="text-4xl font-bold text-primary">{score}</p>
@@ -35,7 +35,7 @@ export function MomentumCard({ latestMomentum, routineSuggestion }: MomentumCard
         </div>
         
         {routineSuggestion && (
-            <div className="p-2 text-xs rounded-lg bg-muted text-muted-foreground border border-primary/20">
+            <div className="p-3 text-xs rounded-lg bg-muted text-muted-foreground border border-primary/20">
                 <div className="flex items-start gap-2">
                     <BrainCircuit className="size-4 shrink-0 mt-0.5 text-primary" />
                     <p><span className="font-semibold text-foreground">Pattern Detected:</span> {routineSuggestion}</p>
@@ -44,8 +44,11 @@ export function MomentumCard({ latestMomentum, routineSuggestion }: MomentumCard
         )}
 
         {latestMomentum?.summary && (
-            <div className="p-2 text-xs rounded-lg bg-muted text-muted-foreground">
-                <p><span className="font-semibold text-foreground">AI Summary:</span> {latestMomentum.summary}</p>
+             <div className="p-3 text-sm rounded-lg bg-muted text-muted-foreground border border-primary/20">
+                <div className="flex items-start gap-3">
+                    <BrainCircuit className="size-4 shrink-0 mt-0.5 text-primary" />
+                    <p className="whitespace-pre-wrap"><span className="font-semibold text-foreground">AI Summary:</span> {latestMomentum.summary}</p>
+                </div>
             </div>
         )}
          {!latestMomentum && !routineSuggestion && (
