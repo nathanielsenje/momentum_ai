@@ -185,7 +185,7 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
             {completedTasks.length > 0 && (
                 <div className="pt-4">
                     <h3 className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Completed</h3>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                          {completedTasks.map(task => (
                              <div key={task.id} className="flex items-center gap-3">
                                 <Checkbox
