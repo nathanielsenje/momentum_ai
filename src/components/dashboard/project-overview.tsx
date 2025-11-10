@@ -16,20 +16,25 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { ProjectDialog } from './project-dialog';
+import { cn } from '@/lib/utils';
 
 export function ProjectOverview({ projects, tasks }: { projects: Project[]; tasks: Task[] }) {
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
 
   const getProjectProgress = (projectId: string) => {
     const projectTasks = tasks.filter(t => t.projectId === projectId);
-    if (projectTasks.length === 0) return { percentage: 0, text: "No tasks", data: [] };
-    const completedTasks = projectTasks.filter(t => t.completed).length;
     const totalTasks = projectTasks.length;
+    if (totalTasks === 0) return { percentage: 0, text: "No tasks", data: [], totalTasks: 0, completedTasks: 0 };
+    
+    const completedTasks = projectTasks.filter(t => t.completed).length;
     const percentage = Math.round((completedTasks / totalTasks) * 100);
+    
     return {
       percentage,
       text: `${completedTasks} / ${totalTasks}`,
-      data: [{ name: 'Progress', value: percentage, fill: "hsl(var(--primary))" }]
+      data: [{ name: 'Progress', value: percentage, fill: "hsl(var(--primary))" }],
+      totalTasks,
+      completedTasks
     };
   }
 
@@ -75,36 +80,50 @@ export function ProjectOverview({ projects, tasks }: { projects: Project[]; task
                                     <CardHeader className="pb-2">
                                         <CardTitle className="text-base font-semibold">{project.name}</CardTitle>
                                     </CardHeader>
-                                    <CardContent className="flex items-center justify-between">
-                                        <p className="text-sm text-muted-foreground">{progress.text} completed</p>
-                                        <ChartContainer
-                                            config={{
-                                                value: { label: "Progress", color: "hsl(var(--primary))" }
-                                            }}
-                                            className="mx-auto aspect-square h-16 w-16"
-                                        >
-                                            <RadialBarChart
-                                                data={progress.data}
-                                                startAngle={90}
-                                                endAngle={-270}
-                                                innerRadius="70%"
-                                                outerRadius="100%"
-                                                barSize={6}
-                                                cy="55%"
+                                    <CardContent className="flex flex-col items-center justify-center gap-2">
+                                        <div className="flex items-center justify-between w-full">
+                                            <p className="text-sm text-muted-foreground">{progress.text} completed</p>
+                                            <ChartContainer
+                                                config={{
+                                                    value: { label: "Progress", color: "hsl(var(--primary))" }
+                                                }}
+                                                className="mx-auto aspect-square h-16 w-16"
                                             >
-                                                <PolarAngleAxis type="number" domain={[0, 100]} dataKey="value" tick={false} />
-                                                <RadialBar dataKey="value" background cornerRadius={10} className="fill-primary" />
-                                                <text
-                                                    x="50%"
-                                                    y="55%"
-                                                    textAnchor="middle"
-                                                    dominantBaseline="middle"
-                                                    className="fill-foreground text-xs font-medium"
+                                                <RadialBarChart
+                                                    data={progress.data}
+                                                    startAngle={90}
+                                                    endAngle={-270}
+                                                    innerRadius="70%"
+                                                    outerRadius="100%"
+                                                    barSize={6}
+                                                    cy="55%"
                                                 >
-                                                    {progress.percentage}%
-                                                </text>
-                                            </RadialBarChart>
-                                        </ChartContainer>
+                                                    <PolarAngleAxis type="number" domain={[0, 100]} dataKey="value" tick={false} />
+                                                    <RadialBar dataKey="value" background cornerRadius={10} className="fill-primary" />
+                                                    <text
+                                                        x="50%"
+                                                        y="55%"
+                                                        textAnchor="middle"
+                                                        dominantBaseline="middle"
+                                                        className="fill-foreground text-xs font-medium"
+                                                    >
+                                                        {progress.percentage}%
+                                                    </text>
+                                                </RadialBarChart>
+                                            </ChartContainer>
+                                        </div>
+                                         {progress.totalTasks > 0 && (
+                                            <div className="flex w-full gap-1 pt-1">
+                                                {Array.from({ length: progress.totalTasks }).map((_, i) => (
+                                                    <div key={i} className="h-1 flex-1 rounded-full bg-muted">
+                                                        <div className={cn(
+                                                            "h-1 rounded-full",
+                                                            i < progress.completedTasks && "bg-primary"
+                                                        )} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
                             </div>
