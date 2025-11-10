@@ -47,28 +47,28 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-                <Link href="/" legacyBehavior passHref>
-                  <SidebarMenuButton
-                    isActive={pathname === '/'}
-                    tooltip="Dashboard"
-                    asChild={false}
-                  >
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/'}
+                  tooltip="Dashboard"
+                >
+                  <Link href="/">
                       <Gauge />
                       <span>Dashboard</span>
-                  </SidebarMenuButton>
-                </Link>
+                  </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <Link href="/analytics" legacyBehavior passHref>
-                  <SidebarMenuButton
-                    isActive={pathname === '/analytics'}
-                    tooltip="Analytics"
-                    asChild={false}
-                  >
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/analytics'}
+                  tooltip="Analytics"
+                >
+                  <Link href="/analytics">
                       <Activity />
                       <span>Analytics</span>
-                  </SidebarMenuButton>
-                </Link>
+                  </Link>
+                </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
