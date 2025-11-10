@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const [suggestions, setSuggestions] = React.useState<ScoreAndSuggestTasksOutput>({
     suggestedTasks: [],
     microSuggestions: [],
+    routineSuggestion: undefined,
   });
   const [focusedTask, setFocusedTask] = React.useState<Task | null>(null);
 
@@ -142,10 +143,6 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold tracking-tight font-headline">
-        Dashboard
-      </h1>
-      
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-1">
             <Pomodoro task={focusedTask} />
