@@ -17,14 +17,6 @@ interface WeatherData {
   temperature: number; // in Fahrenheit
 }
 
-const weatherIcons: Record<WeatherCondition, React.ElementType> = {
-  Sunny: Sun,
-  Cloudy: Cloud,
-  Rainy: CloudRain,
-  Snowy: CloudSnow,
-  Windy: Wind,
-};
-
 // Mock function to simulate a weather API call
 const getMockWeather = (lat: number, lon: number): Promise<WeatherData> => {
   return new Promise(resolve => {
@@ -53,29 +45,41 @@ export function WeatherWidget() {
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser.');
-      setIsLoading(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const weatherData = await getMockWeather(latitude, longitude);
-          setWeather(weatherData);
-        } catch (apiError) {
-          setError('Could not fetch weather data.');
-        } finally {
+    if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const weatherData = await getMockWeather(latitude, longitude);
+            setWeather(weatherData);
+          } catch (apiError) {
+            setError('Could not fetch weather data.');
+          } finally {
+            setIsLoading(false);
+          }
+        },
+        (error) => {
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              setError("Location access denied.");
+              break;
+            case error.POSITION_UNAVAILABLE:
+              setError("Location information is unavailable.");
+              break;
+            case error.TIMEOUT:
+              setError("Location request timed out.");
+              break;
+            default:
+              setError("An unknown error occurred.");
+              break;
+          }
           setIsLoading(false);
         }
-      },
-      () => {
-        setError('Location access denied. Please enable it in your browser settings.');
-        setIsLoading(false);
-      }
-    );
+      );
+    } else {
+      setError('Geolocation is not supported by your browser.');
+      setIsLoading(false);
+    }
   }, []);
 
   const WeatherIcon = weather ? weatherIcons[weather.condition] : null;
