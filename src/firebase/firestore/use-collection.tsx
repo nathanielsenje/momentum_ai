@@ -113,15 +113,17 @@ export function useCollection<T>(
         console.error(`Error fetching collection ${path}:`, err);
         setError(err);
         setLoading(false);
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: (memoizedQuery as CollectionReference).path,
-            operation: 'list',
-        }));
+        if (err.code === 'permission-denied') {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: (memoizedQuery as CollectionReference).path,
+              operation: 'list',
+          }));
+        }
       }
     );
 
     return () => unsubscribe();
-  }, [memoizedQuery]);
+  }, [memoizedQuery, path]);
 
   return { data, loading, error };
 }

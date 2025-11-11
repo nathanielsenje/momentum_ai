@@ -53,15 +53,17 @@ export function useDoc<T>(path: string) {
         console.error(`Error fetching document ${path}:`, err);
         setError(err);
         setLoading(false);
-         errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: memoizedDocRef.path,
-            operation: 'get',
-        }));
+        if (err.code === 'permission-denied') {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: memoizedDocRef.path,
+              operation: 'get',
+          }));
+        }
       }
     );
 
     return () => unsubscribe();
-  }, [memoizedDocRef]);
+  }, [memoizedDocRef, path]);
 
   return { data, loading, error };
 }
