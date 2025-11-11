@@ -71,17 +71,16 @@ export function TaskList() {
     setAllTasks(optimisticUpdate);
 
     startTransition(async () => {
-      try {
-        await completeTaskAction(userId, id, completed);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Uh oh! Something went wrong.',
-          description: 'There was a problem updating your task. Reverting changes.',
-        });
-        setTasks(initialTasks); // Revert from original state
-        setAllTasks(initialTasks);
-      }
+        completeTaskAction(userId, id, completed)
+            .catch((error) => {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Uh oh! Something went wrong.',
+                    description: 'There was a problem updating your task. Reverting changes.',
+                });
+                setTasks(initialTasks); // Revert from original state
+                setAllTasks(initialTasks);
+            });
     });
   };
 
@@ -313,5 +312,7 @@ export function TaskList() {
     </>
   );
 }
+
+    
 
     
