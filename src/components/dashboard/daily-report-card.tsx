@@ -35,14 +35,22 @@ export function DailyReportCard() {
   }, [initialReport?.startTime, initialReport?.endTime]);
 
   const handleTimeTracking = (action: 'start' | 'end') => {
+    const now = new Date().toISOString();
+    const updates: Partial<DailyReport> = action === 'start' ? { startTime: now } : { endTime: now };
+    
+    // Optimistic UI update
+    const previousReport = report;
+    setReport(prev => prev ? { ...prev, ...updates } : null);
+
     startTransition(async () => {
-      const now = new Date().toISOString();
-      const updates: Partial<DailyReport> = action === 'start' ? { startTime: now } : { endTime: now };
       try {
         const updatedReport = await updateReportAction(userId, updates);
+        // Sync with server state
         setReport(updatedReport);
         toast({ title: `Work ${action} time recorded!` });
       } catch (e) {
+        // Revert on error
+        setReport(previousReport);
         toast({ variant: 'destructive', title: `Failed to record ${action} time.` });
       }
     });
