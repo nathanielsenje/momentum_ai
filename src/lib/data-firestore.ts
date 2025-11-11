@@ -1,3 +1,4 @@
+
 'use server';
 
 import {
@@ -21,7 +22,14 @@ import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, Re
 import { format } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import data from '@/data/categories.json';
+
+const categories: Category[] = [
+  { "id": "work", "name": "Work" },
+  { "id": "personal", "name": "Personal" },
+  { "id": "learning", "name": "Learning" },
+  { "id": "health", "name": "Health" },
+  { "id": "chore", "name": "Chore" }
+];
 
 const getToday = () => format(new Date(), 'yyyy-MM-dd');
 
@@ -79,9 +87,9 @@ export async function deleteTask(db: Firestore, userId: string, taskId: string):
     });
 }
 
-// Category Functions - Still from JSON as they are static
+// Category Functions - Now from an in-memory array as they are static
 export async function getCategories(): Promise<Category[]> {
-  return data;
+  return categories;
 }
 
 // Energy Log Functions
