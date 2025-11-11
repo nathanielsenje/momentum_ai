@@ -9,16 +9,19 @@ import type { MomentumScore, EnergyLog, Project, Task } from '@/lib/types';
 import { EnergyInput } from './energy-input';
 import { SuggestionsDialog } from './suggestions-dialog';
 import { getSuggestedTasks, ScoreAndSuggestTasksOutput } from '@/app/actions';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { useUser } from '@/firebase';
 
-interface MomentumCardProps {
-    initialLatestMomentum?: MomentumScore;
-    initialTodayEnergy?: EnergyLog;
-    tasks: Task[];
-    projects: Project[];
-    userId: string;
-}
+export function MomentumCard() {
+  const { user } = useUser();
+  const {
+    tasks,
+    projects,
+    todayEnergy: initialTodayEnergy,
+    latestMomentum: initialLatestMomentum
+  } = useDashboardData();
+  const userId = user!.uid;
 
-export function MomentumCard({ initialLatestMomentum, initialTodayEnergy, tasks, projects, userId }: MomentumCardProps) {
   const [latestMomentum, setLatestMomentum] = React.useState(initialLatestMomentum);
   const [todayEnergy, setTodayEnergy] = React.useState(initialTodayEnergy);
   const [suggestions, setSuggestions] = React.useState<ScoreAndSuggestTasksOutput>({
@@ -60,30 +63,32 @@ export function MomentumCard({ initialLatestMomentum, initialTodayEnergy, tasks,
   return (
     <Card className="h-full">
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-xl">
-                <TrendingUp className="text-primary" />
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+          <div className="flex-grow">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <TrendingUp className="text-primary size-5" />
                 Daily Momentum
             </CardTitle>
-            <CardDescription>Your daily overview and task-energy alignment.</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">Your daily overview and task-energy alignment.</CardDescription>
           </div>
           {todayEnergy && (
-            <SuggestionsDialog suggestions={suggestions} energyLevel={todayEnergy.level} />
+            <div className="self-start sm:self-auto">
+              <SuggestionsDialog suggestions={suggestions} energyLevel={todayEnergy.level} />
+            </div>
           )}
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-around text-center p-4 rounded-lg bg-secondary/30">
+            <div className="flex items-center justify-around text-center p-4 sm:p-5 rounded-lg bg-secondary/30">
                 <div>
-                    <p className="text-4xl font-bold text-primary">{score}</p>
-                    <p className="text-xs text-muted-foreground">Points</p>
+                    <p className="text-3xl sm:text-4xl font-bold text-primary">{score}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Points</p>
                 </div>
-                <Separator orientation="vertical" className="h-12" />
+                <Separator orientation="vertical" className="h-10 sm:h-12" />
                 <div>
-                    <p className="text-4xl font-bold text-accent">{streak}</p>
-                    <p className="text-xs text-muted-foreground">Day Streak</p>
+                    <p className="text-3xl sm:text-4xl font-bold text-accent">{streak}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Day Streak</p>
                 </div>
             </div>
             <EnergyInput todayEnergy={todayEnergy} onEnergyChange={handleEnergyChange} userId={userId} />

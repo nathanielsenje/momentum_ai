@@ -10,13 +10,14 @@ import { useToast } from '@/hooks/use-toast';
 import { updateReportAction } from '@/app/actions';
 import type { DailyReport } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { useUser } from '@/firebase';
 
-interface DailyReportCardProps {
-  initialReport: DailyReport | null;
-  userId: string;
-}
+export function DailyReportCard() {
+  const { user } = useUser();
+  const { todaysReport: initialReport } = useDashboardData();
+  const userId = user!.uid;
 
-export function DailyReportCard({ initialReport, userId }: DailyReportCardProps) {
   const [report, setReport] = React.useState<DailyReport | null>(initialReport);
   const [clientFormattedTimes, setClientFormattedTimes] = React.useState({ startTime: 'Not set', endTime: 'Not set' });
   const [isPending, startTransition] = useTransition();
@@ -67,15 +68,16 @@ export function DailyReportCard({ initialReport, userId }: DailyReportCardProps)
         <CardDescription>Log your work hours and generate a summary.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
             <h4 className="text-sm font-semibold">Work Time</h4>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => handleTimeTracking('start')}
                 disabled={isPending || !!report?.startTime}
+                className="flex-1 sm:flex-none"
               >
                 <Play className="mr-2 h-4 w-4" /> Start
               </Button>
@@ -84,38 +86,39 @@ export function DailyReportCard({ initialReport, userId }: DailyReportCardProps)
                 variant="outline"
                 onClick={() => handleTimeTracking('end')}
                 disabled={isPending || !report?.startTime || !!report?.endTime}
+                className="flex-1 sm:flex-none"
               >
                 <Square className="mr-2 h-4 w-4" /> End
               </Button>
             </div>
-            <div className="text-xs text-muted-foreground">
-              <p>Start: {clientFormattedTimes.startTime}</p>
-              <p>End: {clientFormattedTimes.endTime}</p>
+            <div className="text-xs text-muted-foreground space-y-0.5">
+              <p>Start: <span className="font-medium text-foreground">{clientFormattedTimes.startTime}</span></p>
+              <p>End: <span className="font-medium text-foreground">{clientFormattedTimes.endTime}</span></p>
             </div>
           </div>
           <div className="flex flex-col gap-2">
             <h4 className="text-sm font-semibold">Task Summary</h4>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                <div className="flex items-center gap-1.5 text-muted-foreground">
+            <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-x-4 gap-y-2 text-sm">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-1.5 text-muted-foreground">
                     <Goal className="size-4 text-amber-500" />
-                    <span><span className="font-bold text-foreground">{report?.goals ?? 0}</span> Goals</span>
+                    <span className="text-xs sm:text-sm"><span className="font-bold text-foreground">{report?.goals ?? 0}</span> Goals</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-muted-foreground">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-1.5 text-muted-foreground">
                     <CheckCircle2 className="size-4 text-green-500" />
-                    <span><span className="font-bold text-foreground">{report?.completed ?? 0}</span> Completed</span>
+                    <span className="text-xs sm:text-sm"><span className="font-bold text-foreground">{report?.completed ?? 0}</span> Done</span>
                 </div>
-                 <div className="flex items-center gap-1.5 text-muted-foreground">
+                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-1.5 text-muted-foreground">
                     <Hourglass className="size-4 text-blue-500" />
-                    <span><span className="font-bold text-foreground">{report?.inProgress ?? 0}</span> In Progress</span>
+                    <span className="text-xs sm:text-sm"><span className="font-bold text-foreground">{report?.inProgress ?? 0}</span> Active</span>
                 </div>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 pt-2 border-t border-primary/10">
-          <Button size="sm" disabled={isPending}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2 border-t border-primary/10">
+          <Button size="sm" disabled={isPending} className="w-full sm:w-auto">
             <FileText className="mr-2 h-4 w-4" /> Generate Report
           </Button>
-          <Button size="sm" variant="secondary" onClick={handleCopyToClipboard} disabled={isPending}>
+          <Button size="sm" variant="secondary" onClick={handleCopyToClipboard} disabled={isPending} className="w-full sm:w-auto">
             <Clipboard className="mr-2 h-4 w-4" /> Copy to Clipboard
           </Button>
         </div>

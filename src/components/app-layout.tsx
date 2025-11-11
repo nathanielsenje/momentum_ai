@@ -59,8 +59,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isAuthPage) {
     return (
-       <div className="flex min-h-screen items-center justify-center bg-background p-4">
-          {children}
+       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+          <div className="hidden lg:flex flex-col items-center justify-center gap-4 bg-secondary/50 p-8 text-center">
+            <Logo className="w-24 h-24 text-primary" />
+            <h1 className="text-4xl font-bold font-headline">Momentum AI</h1>
+            <p className="text-muted-foreground">
+              The intelligent productivity app to help you find your flow.
+            </p>
+          </div>
+          <div className="flex items-center justify-center p-4">
+            {children}
+          </div>
         </div>
     );
   }

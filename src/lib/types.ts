@@ -7,6 +7,7 @@ export type EisenhowerMatrix = 'Urgent & Important' | 'Important & Not Urgent' |
 
 export interface Task {
   id: string;
+  userId: string;
   name: string;
   category: string;
   energyLevel: EnergyLevel;
@@ -40,6 +41,7 @@ export interface MomentumScore {
 
 export interface Project {
     id: string;
+    userId: string;
     name: string;
     priority: ProjectPriority;
 }

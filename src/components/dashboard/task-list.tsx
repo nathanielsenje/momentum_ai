@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TaskFormDialog } from './task-form-dialog';
-import type { Task, Category, EnergyLevel, EnergyLog, Project, EisenhowerMatrix } from '@/lib/types';
+import type { Task, Category, EnergyLevel, Project, EisenhowerMatrix } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Zap, ZapOff, BatteryMedium, Target, ListTodo, Folder, PlayCircle, Shield, Edit } from 'lucide-react';
 import {
@@ -26,7 +26,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { completeTaskAction, createTaskAction, deleteTaskAction, updateTaskAction } from '@/app/actions';
 import { PomodoroContext } from './pomodoro-provider';
-
+import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { useUser } from '@/firebase';
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
   Low: ZapOff,
@@ -41,15 +42,11 @@ const priorityColors: Record<EisenhowerMatrix, string> = {
     'Not Urgent & Not Important': 'text-gray-500',
 }
 
-interface TaskListProps {
-    initialTasks: Task[];
-    categories: Category[];
-    todayEnergy?: EnergyLog;
-    projects: Project[];
-    userId: string;
-}
+export function TaskList() {
+  const { user } = useUser();
+  const { tasks: initialTasks, categories, projects, todayEnergy } = useDashboardData();
+  const userId = user!.uid;
 
-export function TaskList({ initialTasks, categories, projects, todayEnergy, userId }: TaskListProps) {
   const [tasks, setTasks] = React.useState(initialTasks);
   const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = React.useState<EnergyLevel | 'all'>('all');
@@ -62,7 +59,6 @@ export function TaskList({ initialTasks, categories, projects, todayEnergy, user
   }, [initialTasks]);
 
   const handleComplete = (id: string, completed: boolean) => {
-    // Optimistic update
     const originalTasks = tasks;
     setTasks(prevTasks =>
       prevTasks.map(task =>
@@ -75,7 +71,6 @@ export function TaskList({ initialTasks, categories, projects, todayEnergy, user
     startTransition(async () => {
       try {
         await completeTaskAction(userId, id, completed);
-        // Let server action handle revalidation
       } catch (error) {
         setTasks(originalTasks);
         toast({
@@ -208,26 +203,28 @@ export function TaskList({ initialTasks, categories, projects, todayEnergy, user
                                 disabled={isPending}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
-                                <label htmlFor={`task-${task.id}`} className={cn("font-semibold text-sm", task.completed && "line-through text-muted-foreground")}>
+                            <div className="flex-grow min-w-0">
+                                <label htmlFor={`task-${task.id}`} className={cn("font-semibold text-sm sm:text-base block break-words", task.completed && "line-through text-muted-foreground")}>
                                     {task.name}
                                 </label>
-                                <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                                    <Badge variant="secondary" className="capitalize">{getCategoryName(task.category)}</Badge>
-                                    <div className="flex items-center gap-1">
-                                        <Icon className="size-3" />
-                                        <span>{task.energyLevel} Energy</span>
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground mt-1.5">
+                                    <Badge variant="secondary" className="capitalize text-xs">{getCategoryName(task.category)}</Badge>
+                                    <div className="flex items-center gap-1 whitespace-nowrap">
+                                        <Icon className="size-3 flex-shrink-0" />
+                                        <span className="hidden sm:inline">{task.energyLevel} Energy</span>
+                                        <span className="sm:hidden">{task.energyLevel}</span>
                                     </div>
                                     {projectName && (
-                                        <div className="flex items-center gap-1">
-                                            <Folder className="size-3" />
-                                            <span>{projectName}</span>
+                                        <div className="flex items-center gap-1 max-w-[120px] sm:max-w-none truncate">
+                                            <Folder className="size-3 flex-shrink-0" />
+                                            <span className="truncate">{projectName}</span>
                                         </div>
                                     )}
                                     {task.priority && (
                                         <Tooltip>
                                             <TooltipTrigger className="flex items-center gap-1">
                                                 <Shield className={cn("size-3", priorityColor)} />
+                                                <span className="hidden md:inline text-xs">{task.priority}</span>
                                             </TooltipTrigger>
                                             <TooltipContent>
                                                 <p>{task.priority}</p>
@@ -245,20 +242,20 @@ export function TaskList({ initialTasks, categories, projects, todayEnergy, user
                                      </div>
                                  )}
                             </div>
-                            <div className="absolute top-1/2 right-2 -translate-y-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute top-2 right-2 sm:top-1/2 sm:-translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 md:transition-opacity bg-background/80 backdrop-blur-sm rounded-md p-1">
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8"
+                                            className="h-7 w-7 sm:h-8 sm:w-8"
                                             onClick={() => setFocusedTask(task)}
                                         >
-                                            <PlayCircle className="size-4" />
+                                            <PlayCircle className="size-3.5 sm:size-4" />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                        <p>Start Pomodoro session</p>
+                                        <p>Start Pomodoro</p>
                                     </TooltipContent>
                                 </Tooltip>
                                 <Tooltip>
@@ -266,10 +263,10 @@ export function TaskList({ initialTasks, categories, projects, todayEnergy, user
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8"
+                                            className="h-7 w-7 sm:h-8 sm:w-8"
                                             onClick={() => setEditingTask(task)}
                                         >
-                                            <Edit className="size-4" />
+                                            <Edit className="size-3.5 sm:size-4" />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>

@@ -178,7 +178,6 @@ export default function SignupPage() {
 
   if (userLoading || !auth || !firestore) {
       return (
-          <div className="flex min-h-screen items-center justify-center p-4">
             <Card className="w-full max-w-sm">
                 <CardHeader className="text-center">
                     <Skeleton className="mx-auto h-10 w-10 rounded-full" />
@@ -197,15 +196,13 @@ export default function SignupPage() {
                     <Skeleton className="h-4 w-1/2" />
                 </CardFooter>
             </Card>
-          </div>
       );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <Logo className="mx-auto h-10 w-10 text-primary" />
+          <Logo className="mx-auto h-10 w-10 text-primary lg:hidden" />
           <CardTitle className="mt-2">Create an Account</CardTitle>
           <CardDescription>Join Momentum AI to start aligning your energy with your tasks.</CardDescription>
         </CardHeader>
@@ -292,6 +289,5 @@ export default function SignupPage() {
         </p>
       </CardFooter>
       </Card>
-    </div>
   );
 }

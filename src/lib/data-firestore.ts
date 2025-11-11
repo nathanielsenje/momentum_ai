@@ -39,10 +39,11 @@ export async function getTasks(db: Firestore, userId: string): Promise<Task[]> {
   return taskList;
 }
 
-export async function addTask(db: Firestore, userId: string, taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>): Promise<Task> {
+export async function addTask(db: Firestore, userId: string, taskData: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>): Promise<Task> {
     const tasksCol = collection(db, 'users', userId, 'tasks');
     const newTaskData = {
         ...taskData,
+        userId,
         completed: false,
         completedAt: null,
         createdAt: new Date().toISOString(),
@@ -128,9 +129,10 @@ export async function getProjects(db: Firestore, userId: string): Promise<Projec
     return projectSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
 }
 
-export async function addProject(db: Firestore, userId: string, projectData: Omit<Project, 'id'>): Promise<Project> {
+export async function addProject(db: Firestore, userId: string, projectData: Omit<Project, 'id' | 'userId'>): Promise<Project> {
     const projectsCol = collection(db, 'users', userId, 'projects');
-    const docRef = await addDoc(projectsCol, projectData);
+    const dataWithUserId = { ...projectData, userId };
+    const docRef = await addDoc(projectsCol, dataWithUserId);
     const newProject = await getDoc(docRef);
     return { id: newProject.id, ...newProject.data() } as Project;
 }

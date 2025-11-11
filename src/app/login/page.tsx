@@ -98,7 +98,6 @@ export default function LoginPage() {
   
   if (userLoading || !auth) {
       return (
-          <div className="flex min-h-screen items-center justify-center p-4">
             <Card className="w-full max-w-sm">
                 <CardHeader className="text-center">
                     <Skeleton className="mx-auto h-10 w-10 text-primary" />
@@ -115,15 +114,13 @@ export default function LoginPage() {
                     <Skeleton className="h-4 w-1/2" />
                 </CardFooter>
             </Card>
-          </div>
       );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <Logo className="mx-auto h-10 w-10 text-primary" />
+          <Logo className="mx-auto h-10 w-10 text-primary lg:hidden" />
           <CardTitle className="mt-2">Welcome Back</CardTitle>
           <CardDescription>Sign in to access your Momentum AI dashboard.</CardDescription>
         </CardHeader>
@@ -184,6 +181,5 @@ export default function LoginPage() {
         </p>
       </CardFooter>
       </Card>
-    </div>
   );
 }

@@ -55,29 +55,30 @@ export function Pomodoro() {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="text-xl">Pomodoro Timer</CardTitle>
-        <CardDescription className="h-5">
+        <CardTitle className="text-lg sm:text-xl">Pomodoro Timer</CardTitle>
+        <CardDescription className="min-h-[1.25rem] text-xs sm:text-sm">
             {focusedTask ? (
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Target className="size-3" /> Focusing on: {focusedTask.name}
+                    <Target className="size-3 flex-shrink-0" />
+                    <span className="truncate">Focusing on: {focusedTask.name}</span>
                 </span>
             ) : "Select a task to focus on."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col flex-grow items-center justify-center gap-4">
+      <CardContent className="flex flex-col flex-grow items-center justify-center gap-4 sm:gap-6">
         <div className="text-center">
-            <p className="text-muted-foreground text-sm mb-2">{sessionType} Session</p>
-            <div className="text-9xl font-bold font-mono text-primary">
+            <p className="text-muted-foreground text-xs sm:text-sm mb-2">{sessionType} Session</p>
+            <div className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold font-mono text-primary">
             {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
             </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={toggle} size="lg" variant={isActive ? 'secondary' : 'default'} disabled={!focusedTask}>
-            {isActive ? <Pause /> : <Play />}
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button onClick={toggle} size="lg" variant={isActive ? 'secondary' : 'default'} disabled={!focusedTask} className="flex-1 sm:flex-none">
+            {isActive ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
             {isActive ? 'Pause' : 'Start'}
           </Button>
-          <Button onClick={reset} size="lg" variant="outline">
-            <RotateCcw />
+          <Button onClick={reset} size="lg" variant="outline" disabled={!focusedTask} className="flex-1 sm:flex-none">
+            <RotateCcw className="mr-2 h-4 w-4" />
             Reset
           </Button>
         </div>

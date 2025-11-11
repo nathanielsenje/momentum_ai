@@ -101,36 +101,26 @@ service cloud.firestore {
     }
 
     /**
-     * @description Rules for the /users/{userId}/energyRatings/{energyRatingId} collection.
-     * @path /users/{userId}/energyRatings/{energyRatingId}
-     * @allow (create) - A user can create an energy rating if the userId matches their auth UID.
-     * @allow (get, list, update, delete) - A user can read, list, update, or delete their own energy ratings.
-     * @deny (create) - A user cannot create an energy rating with a userId that does not match their auth UID.
-     * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's energy ratings.
-     * @principle Enforces document ownership for all operations on energy rating documents.
+     * @description Rules for the /users/{userId}/energy-log/{energyLogId} collection.
+     * @path /users/{userId}/energy-log/{energyLogId}
      */
-    match /users/{userId}/energyRatings/{energyRatingId} {
+    match /users/{userId}/energy-log/{energyLogId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Rules for the /users/{userId}/momentumScores/{momentumScoreId} collection.
-     * @path /users/{userId}/momentumScores/{momentumScoreId}
-     * @allow (create) - A user can create a momentum score if the userId matches their auth UID.
-     * @allow (get, list, update, delete) - A user can read, list, update, or delete their own momentum scores.
-     * @deny (create) - A user cannot create a momentum score with a userId that does not match their auth UID.
-     * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's momentum scores.
-     * @principle Enforces document ownership for all operations on momentum score documents.
+     * @description Rules for the /users/{userId}/momentum/{momentumId} collection.
+     * @path /users/{userId}/momentum/{momentumId}
      */
-    match /users/{userId}/momentumScores/{momentumScoreId} {
+    match /users/{userId}/momentum/{momentumId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
@@ -149,6 +139,47 @@ service cloud.firestore {
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
       allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for the /users/{userId}/projects/{projectId} collection.
+     * @path /users/{userId}/projects/{projectId}
+     * @allow (create) - A user can create a project if the userId matches their auth UID.
+     * @allow (get, list, update, delete) - A user can read, list, update, or delete their own projects.
+     * @deny (create) - A user cannot create a project with a userId that does not match their auth UID.
+     * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's projects.
+     * @principle Enforces document ownership for all operations on project documents.
+     */
+    match /users/{userId}/projects/{projectId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for the /users/{userId}/reports/{reportId} collection.
+     * @path /users/{userId}/reports/{reportId}
+     */
+    match /users/{userId}/reports/{reportId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for the /users/{userId}/recurring-tasks/{recurringTaskId} collection.
+     * @path /users/{userId}/recurring-tasks/{recurringTaskId}
+     */
+    match /users/{userId}/recurring-tasks/{recurringTaskId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
     }
   }
 }

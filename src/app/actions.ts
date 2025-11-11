@@ -42,7 +42,7 @@ export async function setEnergyLevelAction(userId: string, level: EnergyLevel) {
   revalidatePath('/');
 }
 
-export async function createTaskAction(userId: string, data: Omit<Task, 'id'| 'completed' | 'completedAt' | 'createdAt'>) {
+export async function createTaskAction(userId: string, data: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>) {
   const newTask = await addTask(getDb(), userId, data);
   revalidatePath('/');
   revalidatePath('/projects');

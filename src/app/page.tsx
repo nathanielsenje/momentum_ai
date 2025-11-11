@@ -1,7 +1,10 @@
+
 'use client';
+
 import * as React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardClientPage } from './client-page';
+import { DashboardDataProvider } from '@/hooks/use-dashboard-data';
 
 export default function DashboardPage() {
     return (
@@ -16,7 +19,9 @@ export default function DashboardPage() {
                 <Skeleton className="h-64" />
             </div>
         }>
-            <DashboardClientPage />
+            <DashboardDataProvider>
+                <DashboardClientPage />
+            </DashboardDataProvider>
         </React.Suspense>
     );
 }
