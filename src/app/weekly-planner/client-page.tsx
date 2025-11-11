@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -69,20 +70,12 @@ export function WeeklyPlannerClientPage() {
   const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => {
     if (!user) return;
     startTransition(async () => {
-      try {
-        const newTask = await createTaskAction(user.uid, taskData);
-        setTasks(prevTasks => [...prevTasks, newTask]);
-        toast({
-          title: 'Task created!',
-          description: 'Your new task has been added to the planner.',
-        });
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Uh oh! Something went wrong.',
-          description: 'There was a problem creating your task.',
-        });
-      }
+      const newTask = await createTaskAction(user.uid, taskData);
+      setTasks(prevTasks => [...prevTasks, newTask]);
+      toast({
+        title: 'Task created!',
+        description: 'Your new task has been added to the planner.',
+      });
     });
   };
 
@@ -153,3 +146,5 @@ export function WeeklyPlannerClientPage() {
     </Card>
   );
 }
+
+    

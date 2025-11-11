@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -79,15 +80,13 @@ export function RecurringTasksClientPage() {
   }
 
   const handleCreateRecurringTask = (taskData: Omit<RecurringTask, 'id' | 'lastCompleted'>) => {
-    if (!user) return;
+    if (!user || !firestore) return;
     startTransition(async () => {
       try {
         await createRecurringTaskAction(user.uid, taskData);
         // Refetch tasks after creation
-        if(firestore) {
-          const updatedTasks = await getRecurringTasks(firestore, user.uid);
-          setTasks(updatedTasks);
-        }
+        const updatedTasks = await getRecurringTasks(firestore, user.uid);
+        setTasks(updatedTasks);
         toast({ title: 'Recurring task created!' });
       } catch (error) {
         toast({
@@ -212,3 +211,5 @@ export function RecurringTasksClientPage() {
     </div>
   );
 }
+
+    

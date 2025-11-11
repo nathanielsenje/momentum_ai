@@ -46,7 +46,8 @@ const StatCard = ({ icon, title, value }: { icon: React.ElementType, title: stri
 };
 
 export function ProfileClientPage() {
-  const { user, loading: userLoading, firestore } = useUser();
+  const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -312,5 +313,7 @@ export function ProfileClientPage() {
     </div>
   );
 }
+
+    
 
     

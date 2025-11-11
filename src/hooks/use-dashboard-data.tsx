@@ -42,26 +42,30 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   React.useEffect(() => {
     if (user && firestore) {
       setLoading(true);
-      Promise.all([
-        getTasks(firestore, user.uid),
-        getProjects(firestore, user.uid),
-        getCategories(),
-        getTodayEnergy(firestore, user.uid),
-        getLatestMomentum(firestore, user.uid),
-        getTodaysReport(firestore, user.uid),
-      ]).then(([tasks, projects, categories, todayEnergy, latestMomentum, report]) => {
-        setTasks(tasks);
-        setProjects(projects);
-        setCategories(categories);
-        setTodayEnergy(todayEnergy);
-        setLatestMomentum(latestMomentum);
-        setTodaysReport(report);
-        setLoading(false);
-      }).catch(error => {
-        console.error("Error fetching dashboard data:", error);
-        setError(error);
-        setLoading(false);
-      });
+      const fetchAllData = async () => {
+        try {
+          const [tasks, projects, categories, todayEnergy, latestMomentum, report] = await Promise.all([
+            getTasks(firestore, user.uid),
+            getProjects(firestore, user.uid),
+            getCategories(),
+            getTodayEnergy(firestore, user.uid),
+            getLatestMomentum(firestore, user.uid),
+            getTodaysReport(firestore, user.uid),
+          ]);
+          setTasks(tasks);
+          setProjects(projects);
+          setCategories(categories);
+          setTodayEnergy(todayEnergy);
+          setLatestMomentum(latestMomentum);
+          setTodaysReport(report);
+        } catch (error: any) {
+          console.error("Error fetching dashboard data:", error);
+          setError(error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchAllData();
     }
   }, [user, firestore]);
 
@@ -86,3 +90,5 @@ export function useDashboardData() {
   }
   return context;
 }
+
+    

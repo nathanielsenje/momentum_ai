@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -76,18 +77,19 @@ export function ProjectClientPage() {
 
   const onSubmit = (data: ProjectFormValues) => {
     if (!user) return;
-    startTransition(() => {
-      createProjectAction(user.uid, data.name);
+    startTransition(async () => {
+      const newProject = await createProjectAction(user.uid, data.name);
+      setProjects(prev => [...prev, newProject]);
       toast({ title: 'Project created!' });
       form.reset();
-      // Note: We are relying on revalidation to update the project list
     });
   };
 
   const handleUpdateProject = (projectId: string, updates: Partial<Project>) => {
     if (!user) return;
-    startTransition(() => {
-      updateProjectAction(user.uid, projectId, updates);
+    startTransition(async () => {
+      await updateProjectAction(user.uid, projectId, updates);
+      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, ...updates } : p));
       toast({ title: "Project updated!" });
       setSelectedProject(null);
     });
@@ -95,8 +97,9 @@ export function ProjectClientPage() {
 
   const handleDeleteProject = (projectId: string) => {
       if (!user) return;
-      startTransition(() => {
-          deleteProjectAction(user.uid, projectId);
+      startTransition(async () => {
+          await deleteProjectAction(user.uid, projectId);
+          setProjects(prev => prev.filter(p => p.id !== projectId));
           toast({ title: 'Project deleted' });
           setSelectedProject(null);
       });
@@ -233,3 +236,5 @@ export function ProjectClientPage() {
     </>
   );
 }
+
+    
