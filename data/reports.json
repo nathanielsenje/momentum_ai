@@ -7,5 +7,14 @@
     "goals": 6,
     "completed": 4,
     "inProgress": 2
+  },
+  "2025-11-11": {
+    "date": "2025-11-11",
+    "startTime": null,
+    "endTime": null,
+    "generatedReport": null,
+    "goals": 0,
+    "completed": 0,
+    "inProgress": 0
   }
 }

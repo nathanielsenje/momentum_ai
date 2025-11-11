@@ -43,7 +43,7 @@ const taskFormSchema = z.object({
   name: z.string().min(3, 'Task name must be at least 3 characters.'),
   category: z.string().min(1, 'Please select a category.'),
   energyLevel: z.enum(['Low', 'Medium', 'High']),
-  projectId: z.string().optional().default(''),
+  projectId: z.string().optional(),
   deadline: z.date().optional(),
   effort: z.coerce.number().min(1).max(3).optional(),
   focusType: z.enum(['Creative', 'Analytical', 'Physical', 'Administrative']).optional(),
@@ -77,7 +77,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
       name: '',
       category: '',
       energyLevel: 'Medium',
-      projectId: '',
+      projectId: 'none',
     },
   });
 
@@ -87,14 +87,19 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
             name: task.name,
             category: task.category,
             energyLevel: task.energyLevel,
-            projectId: task.projectId || '',
+            projectId: task.projectId || 'none',
             deadline: task.deadline ? new Date(task.deadline) : undefined,
             effort: task.effort,
             focusType: task.focusType,
             priority: task.priority,
         });
     } else if (!open) {
-        form.reset();
+        form.reset({
+          name: '',
+          category: '',
+          energyLevel: 'Medium',
+          projectId: 'none',
+        });
     }
   }, [open, task, form]);
 
@@ -102,7 +107,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
   const onSubmit = (data: TaskFormValues) => {
     const taskData: TaskData | Partial<Omit<Task, 'id'>> = {
         ...data,
-        projectId: data.projectId || undefined,
+        projectId: data.projectId === 'none' ? undefined : data.projectId,
         deadline: data.deadline ? data.deadline.toISOString() : undefined,
     };
     onSave(taskData, task?.id);
@@ -162,7 +167,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No project</SelectItem>
+                          <SelectItem value="none">No project</SelectItem>
                           {projects.map((project) => (
                             <SelectItem key={project.id} value={project.id}>
                               {project.name}
@@ -297,7 +302,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                        <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select focus type" />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="Creative">Creative</SelectItem>
