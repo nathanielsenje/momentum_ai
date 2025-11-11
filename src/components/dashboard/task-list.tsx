@@ -56,15 +56,16 @@ export function TaskList() {
   const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
 
   const handleComplete = (id: string, completed: boolean) => {
-    const originalTasks = initialTasks;
-    const optimisticUpdate = (prevTasks: Task[]) =>
-      prevTasks.map(task =>
-        task.id === id
-          ? { ...task, completed, completedAt: completed ? new Date().toISOString() : null }
-          : task
-      );
-
-    setAllTasks(optimisticUpdate);
+    let originalTasks: Task[] = [];
+    
+    setAllTasks(currentTasks => {
+        originalTasks = currentTasks;
+        return currentTasks.map(task =>
+            task.id === id
+            ? { ...task, completed, completedAt: completed ? new Date().toISOString() : null }
+            : task
+        );
+    });
 
     startTransition(async () => {
         try {
@@ -89,8 +90,7 @@ export function TaskList() {
     startTransition(async () => {
       try {
         const newTask = await addTask(firestore, userId, taskData);
-        const optimisticUpdate = (prev: Task[]) => [...prev, newTask];
-        setAllTasks(optimisticUpdate);
+        setAllTasks(prev => [...prev, newTask]);
         toast({
           title: 'Task created!',
           description: 'Your new task has been added.',
