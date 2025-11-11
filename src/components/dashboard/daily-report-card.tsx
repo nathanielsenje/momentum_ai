@@ -25,32 +25,44 @@ export function DailyReportCard() {
 
   React.useEffect(() => {
     setReport(initialReport);
-  }, [initialReport]);
-
-  React.useEffect(() => {
     setClientFormattedTimes({
       startTime: initialReport?.startTime ? format(parseISO(initialReport.startTime), 'p') : 'Not set',
       endTime: initialReport?.endTime ? format(parseISO(initialReport.endTime), 'p') : 'Not set',
     });
-  }, [initialReport?.startTime, initialReport?.endTime]);
+  }, [initialReport]);
 
   const handleTimeTracking = (action: 'start' | 'end') => {
-    const now = new Date().toISOString();
-    const updates: Partial<DailyReport> = action === 'start' ? { startTime: now } : { endTime: now };
-    
-    // Optimistic UI update
+    const now = new Date();
+    const nowISO = now.toISOString();
+    const nowFormatted = format(now, 'p');
+
+    const updates: Partial<DailyReport> = action === 'start' ? { startTime: nowISO } : { endTime: nowISO };
+
+    // Optimistic UI update for both report data and the formatted time display
     const previousReport = report;
+    const previousFormattedTimes = clientFormattedTimes;
+
     setReport(prev => prev ? { ...prev, ...updates } : null);
+    if (action === 'start') {
+      setClientFormattedTimes(prev => ({ ...prev, startTime: nowFormatted }));
+    } else {
+      setClientFormattedTimes(prev => ({ ...prev, endTime: nowFormatted }));
+    }
 
     startTransition(async () => {
       try {
         const updatedReport = await updateReportAction(userId, updates);
         // Sync with server state
         setReport(updatedReport);
+        setClientFormattedTimes({
+            startTime: updatedReport?.startTime ? format(parseISO(updatedReport.startTime), 'p') : 'Not set',
+            endTime: updatedReport?.endTime ? format(parseISO(updatedReport.endTime), 'p') : 'Not set',
+        });
         toast({ title: `Work ${action} time recorded!` });
       } catch (e) {
         // Revert on error
         setReport(previousReport);
+        setClientFormattedTimes(previousFormattedTimes);
         toast({ variant: 'destructive', title: `Failed to record ${action} time.` });
       }
     });
