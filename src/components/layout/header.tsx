@@ -6,6 +6,7 @@ import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { WeatherWidget } from './weather-widget';
+import { Separator } from '@/components/ui/separator';
 
 export function Header() {
   const [currentTime, setCurrentTime] = React.useState<Date | null>(null);
@@ -25,7 +26,6 @@ export function Header() {
         <Input placeholder="Search..." className="pl-9" />
       </div>
       <div className="flex items-center gap-4">
-        <WeatherWidget />
         <div className="flex flex-col items-end gap-1 text-sm text-muted-foreground">
           <span>
               {currentTime ? format(currentTime, 'eeee, MMMM d') : 'Loading date...'}
@@ -34,6 +34,8 @@ export function Header() {
               {currentTime ? format(currentTime, 'h:mm:ss a') : '...'}
           </span>
         </div>
+        <Separator orientation="vertical" className="h-10" />
+        <WeatherWidget />
       </div>
     </header>
   );
