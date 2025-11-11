@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -27,6 +28,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/header';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { User } from 'lucide-react';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -129,12 +132,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
              <div className="flex items-center gap-2">
                 <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button
+                  <Button
                     variant="ghost"
                     size="icon"
-                    >
-                    <Settings />
-                    </Button>
+                    className="group-data-[collapsible=icon]:size-8"
+                  >
+                    <Avatar className="size-full">
+                        <AvatarFallback>
+                            <User />
+                        </AvatarFallback>
+                    </Avatar>
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="right" align="end">
                     <DropdownMenuItem onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
@@ -143,7 +151,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     </DropdownMenuItem>
                 </DropdownMenuContent>
                 </DropdownMenu>
-                <SidebarTrigger className="ml-auto hidden md:flex" />
             </div>
         </SidebarFooter>
       </Sidebar>

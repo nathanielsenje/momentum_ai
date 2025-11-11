@@ -18,8 +18,8 @@
     "focusType": "Physical",
     "priority": "Important & Not Urgent",
     "id": "1762764152914",
-    "completed": false,
-    "completedAt": null,
+    "completed": true,
+    "completedAt": "2025-11-11T09:59:55.360Z",
     "createdAt": "2025-11-10T08:42:32.914Z"
   },
   {
@@ -46,8 +46,8 @@
     "focusType": "Analytical",
     "priority": "Urgent & Not Important",
     "id": "1762771127478",
-    "completed": false,
-    "completedAt": null,
+    "completed": true,
+    "completedAt": "2025-11-11T09:59:45.604Z",
     "createdAt": "2025-11-10T10:38:47.478Z"
   },
   {
@@ -94,8 +94,8 @@
     "category": "personal",
     "energyLevel": "Medium",
     "id": "1762851971269",
-    "completed": false,
-    "completedAt": null,
+    "completed": true,
+    "completedAt": "2025-11-11T09:59:47.023Z",
     "createdAt": "2025-11-11T09:06:11.269Z"
   }
 ]
