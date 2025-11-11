@@ -282,7 +282,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Effort (1-3)</FormLabel>
-                    <Select onValueChange={(v) => field.onChange(parseInt(v))} value={field.value?.toString()}>
+                    <Select onValueChange={(v) => field.onChange(parseInt(v))} value={field.value?.toString() ?? ''}>
                        <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select effort" />
@@ -304,7 +304,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Focus Type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value ?? ''}>
                        <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select focus type" />
@@ -328,7 +328,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Priority</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value ?? ''}>
                        <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select priority" />
@@ -384,5 +384,3 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
     </Dialog>
   );
 }
-
-    

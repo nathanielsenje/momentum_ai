@@ -20,7 +20,7 @@ import {
   updateRecurringTask,
   updateTodaysReport,
   updateUserProfile,
-} from '@/lib/data-firestore';
+} from '@/lib/data-firestore-server';
 import type { DailyReport, EnergyLevel, Project, RecurringTask, Task, ScoreAndSuggestTasksInput } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { calculateDailyMomentumScore } from '@/ai/flows/calculate-daily-momentum-score';
@@ -28,14 +28,18 @@ import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
 import { subDays, format, isSameDay, parseISO } from 'date-fns';
 import { getDb } from '@/firebase/server-init';
 
+// Note: Using data-firestore-server.ts which is compatible with Firebase Admin SDK
+// This is required because Next.js server actions cannot use client-side Firebase
+
 
 export async function setEnergyLevelAction(userId: string, level: EnergyLevel) {
-  setTodayEnergy(getDb(), userId, level);
+  await setTodayEnergy(getDb(), userId, level);
   revalidatePath('/');
 }
 
 export async function createTaskAction(userId: string, data: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>) {
-  const newTask = await addTask(getDb(), userId, data);
+  const db = getDb();
+  const newTask = await addTask(db, userId, data);
   revalidatePath('/');
   revalidatePath('/projects');
   revalidatePath('/reports');
@@ -44,7 +48,7 @@ export async function createTaskAction(userId: string, data: Omit<Task, 'id' | '
 }
 
 export async function updateTaskAction(userId: string, taskId: string, data: Partial<Omit<Task, 'id'>>) {
-  updateTask(getDb(), userId, taskId, data);
+  await updateTask(getDb(), userId, taskId, data);
   revalidatePath('/');
   revalidatePath('/projects');
   revalidatePath('/reports');
@@ -52,7 +56,7 @@ export async function updateTaskAction(userId: string, taskId: string, data: Par
 }
 
 export async function deleteTaskAction(userId: string, taskId: string) {
-    deleteTask(getDb(), userId, taskId);
+    await deleteTask(getDb(), userId, taskId);
     revalidatePath('/');
     revalidatePath('/projects');
     revalidatePath('/reports');
@@ -92,7 +96,7 @@ async function calculateAndSaveMomentumScore(userId: string) {
 
     const aiResult = await calculateDailyMomentumScore(scoreInput);
 
-    saveMomentumScore(db, userId, {
+    await saveMomentumScore(db, userId, {
         score: aiResult.dailyScore,
         summary: aiResult.summary,
         streak: streak
@@ -101,10 +105,10 @@ async function calculateAndSaveMomentumScore(userId: string) {
 
 export async function completeTaskAction(userId: string, taskId: string, completed: boolean) {
   const completedAt = completed ? new Date().toISOString() : null;
-  updateTask(getDb(), userId, taskId, { completed, completedAt });
+  await updateTask(getDb(), userId, taskId, { completed, completedAt });
 
   if (completed) {
-      calculateAndSaveMomentumScore(userId);
+      await calculateAndSaveMomentumScore(userId);
   }
 
   revalidatePath('/');
@@ -136,31 +140,32 @@ export async function getFlowAlignmentReport(userId: string) {
 }
 
 export async function createProjectAction(userId: string, name: string): Promise<Project> {
-    const newProject = await addProject(getDb(), userId, { name, priority: 'Medium' });
+    const db = getDb();
+    const newProject = await addProject(db, userId, { name, priority: 'Medium' });
     revalidatePath('/projects');
     revalidatePath('/');
     return newProject;
 }
 
 export async function updateProjectAction(userId: string, projectId: string, updates: Partial<Project>) {
-    updateProject(getDb(), userId, projectId, updates);
+    await updateProject(getDb(), userId, projectId, updates);
     revalidatePath('/projects');
     revalidatePath('/');
 }
 
 export async function deleteProjectAction(userId: string, projectId: string) {
-    deleteProject(getDb(), userId, projectId);
+    await deleteProject(getDb(), userId, projectId);
     revalidatePath('/projects');
     revalidatePath('/');
 }
 
 export async function createRecurringTaskAction(userId: string, data: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>) {
-    addRecurringTask(getDb(), userId, data);
+    await addRecurringTask(getDb(), userId, data);
     revalidatePath('/recurring');
 }
 
 export async function completeRecurringTaskAction(userId: string, taskId: string) {
-    updateRecurringTask(getDb(), userId, taskId, { lastCompleted: new Date().toISOString() });
+    await updateRecurringTask(getDb(), userId, taskId, { lastCompleted: new Date().toISOString() });
     revalidatePath('/recurring');
 }
 
@@ -173,7 +178,7 @@ export async function updateReportAction(userId: string, updates: Partial<DailyR
 
 export async function updateUserProfileAction(userId: string, updates: { displayName: string }) {
   const db = getDb();
-  updateUserProfile(db, userId, updates);
+  await updateUserProfile(db, userId, updates);
   revalidatePath('/profile');
   revalidatePath('/'); // To update name in sidebar etc.
 }

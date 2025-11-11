@@ -9,19 +9,11 @@ import { ProjectOverview } from '@/components/dashboard/project-overview';
 import { DailyReportCard } from '@/components/dashboard/daily-report-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase';
-import { useRouter } from 'next/navigation';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 export function DashboardClientPage() {
   const { user, loading: userLoading } = useUser();
-  const router = useRouter();
   const { loading: dataLoading } = useDashboardData();
-
-  React.useEffect(() => {
-    if (!userLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, userLoading, router]);
 
   if (userLoading || dataLoading || !user) {
     return (
