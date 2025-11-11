@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/app-layout';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { ThemeProvider } from '@/components/theme-provider';
 import { PomodoroProvider } from '@/components/dashboard/pomodoro-provider';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'Momentum AI',
@@ -40,11 +41,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <PomodoroProvider>
-            <SidebarProvider>
-              <AppLayout>{children}</AppLayout>
-            </SidebarProvider>
-          </PomodoroProvider>
+          <FirebaseClientProvider>
+            <PomodoroProvider>
+              <SidebarProvider>
+                <AppLayout>{children}</AppLayout>
+              </SidebarProvider>
+            </PomodoroProvider>
+          </FirebaseClientProvider>
           <Toaster />
         </ThemeProvider>
       </body>

@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -24,7 +23,6 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import {
   Form,
@@ -38,9 +36,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
-import { updateProjectAction, deleteProjectAction } from '@/app/actions';
-import type { Project, ProjectPriority, Task } from '@/lib/types';
+import type { Project, Task } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const projectFormSchema = z.object({
@@ -57,11 +53,11 @@ interface ProjectDetailsDialogProps {
   onDelete: (projectId: string) => void;
   onUpdate: (projectId: string, data: Partial<Project>) => void;
   isPending: boolean;
+  userId: string;
 }
 
 export function ProjectDetailsDialog({ project, tasks, open, onOpenChange, onDelete, onUpdate, isPending }: ProjectDetailsDialogProps) {
   const [isEditing, setIsEditing] = React.useState(false);
-  const { toast } = useToast();
 
   const completedTasks = tasks.filter(t => t.completed);
   const openTasks = tasks.filter(t => !t.completed);

@@ -14,7 +14,11 @@ interface ReportData {
   report: string;
 }
 
-export function FlowVisualizer() {
+interface FlowVisualizerProps {
+    userId: string;
+}
+
+export function FlowVisualizer({ userId }: FlowVisualizerProps) {
   const [isPending, startTransition] = useTransition();
   const [reportData, setReportData] = React.useState<ReportData | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -24,7 +28,7 @@ export function FlowVisualizer() {
       setError(null);
       setReportData(null);
       try {
-        const result = await getFlowAlignmentReport();
+        const result = await getFlowAlignmentReport(userId);
         if (result.visualizationUri && result.report) {
             setReportData(result);
         } else {

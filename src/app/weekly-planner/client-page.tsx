@@ -15,17 +15,23 @@ interface WeeklyPlannerClientPageProps {
   tasks: Task[];
   projects: Project[];
   categories: Category[];
+  userId: string;
 }
 
 export function WeeklyPlannerClientPage({
   tasks: initialTasks,
   projects,
   categories,
+  userId
 }: WeeklyPlannerClientPageProps) {
   const [tasks, setTasks] = React.useState(initialTasks);
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [isPending, startTransition] = React.useTransition();
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
@@ -41,7 +47,7 @@ export function WeeklyPlannerClientPage({
   const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => {
     startTransition(async () => {
       try {
-        const newTask = await createTaskAction(taskData);
+        const newTask = await createTaskAction(userId, taskData);
         setTasks(prevTasks => [...prevTasks, newTask]);
         toast({
           title: 'Task created!',

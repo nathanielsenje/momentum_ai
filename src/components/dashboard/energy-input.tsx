@@ -18,9 +18,10 @@ const energyLevels: { level: EnergyLevel; icon: React.ElementType; description: 
 interface EnergyInputProps {
     todayEnergy: EnergyLog | undefined;
     onEnergyChange: (newEnergy: EnergyLog) => void;
+    userId: string;
 }
 
-export function EnergyInput({ todayEnergy, onEnergyChange }: EnergyInputProps) {
+export function EnergyInput({ todayEnergy, onEnergyChange, userId }: EnergyInputProps) {
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = React.useState(false);
 
@@ -34,7 +35,7 @@ export function EnergyInput({ todayEnergy, onEnergyChange }: EnergyInputProps) {
     setOpen(false);
 
     startTransition(() => {
-      setEnergyLevelAction(level);
+      setEnergyLevelAction(userId, level);
     });
   };
   

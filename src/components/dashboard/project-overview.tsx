@@ -18,7 +18,7 @@ import {
 import { ProjectDialog } from './project-dialog';
 import { cn, getProjectProgress } from '@/lib/utils';
 
-export function ProjectOverview({ projects, tasks }: { projects: Project[]; tasks: Task[] }) {
+export function ProjectOverview({ projects, tasks, userId }: { projects: Project[]; tasks: Task[]; userId: string; }) {
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
 
   const getProjectTasks = (projectId: string) => {

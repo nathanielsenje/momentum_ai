@@ -13,9 +13,10 @@ import { format, parseISO } from 'date-fns';
 
 interface DailyReportCardProps {
   initialReport: DailyReport;
+  userId: string;
 }
 
-export function DailyReportCard({ initialReport }: DailyReportCardProps) {
+export function DailyReportCard({ initialReport, userId }: DailyReportCardProps) {
   const [report, setReport] = React.useState(initialReport);
   const [clientFormattedTimes, setClientFormattedTimes] = React.useState({ startTime: 'Not set', endTime: 'Not set' });
   const [isPending, startTransition] = useTransition();
@@ -37,7 +38,7 @@ export function DailyReportCard({ initialReport }: DailyReportCardProps) {
       const now = new Date().toISOString();
       const updates: Partial<DailyReport> = action === 'start' ? { startTime: now } : { endTime: now };
       try {
-        const updatedReport = await updateReportAction(updates);
+        const updatedReport = await updateReportAction(userId, updates);
         setReport(updatedReport);
         toast({ title: `Work ${action} time recorded!` });
       } catch (e) {

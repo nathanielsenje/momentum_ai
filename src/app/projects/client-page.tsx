@@ -30,7 +30,7 @@ const projectFormSchema = z.object({
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
-export function ProjectClientPage({ projects: initialProjects, tasks }: { projects: Project[]; tasks: Task[] }) {
+export function ProjectClientPage({ projects: initialProjects, tasks, userId }: { projects: Project[]; tasks: Task[], userId: string }) {
   const [projects, setProjects] = React.useState(initialProjects);
   const [isPending, startTransition] = useTransition();
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
@@ -48,7 +48,7 @@ export function ProjectClientPage({ projects: initialProjects, tasks }: { projec
   const onSubmit = (data: ProjectFormValues) => {
     startTransition(async () => {
       try {
-        const newProject = await createProjectAction(data.name);
+        const newProject = await createProjectAction(userId, data.name);
         setProjects(prev => [...prev, newProject]);
         toast({ title: 'Project created!' });
         form.reset();
@@ -65,7 +65,7 @@ export function ProjectClientPage({ projects: initialProjects, tasks }: { projec
   const handleUpdateProject = (projectId: string, updates: Partial<Project>) => {
     startTransition(async () => {
         try {
-            const updatedProject = await updateProjectAction(projectId, updates);
+            const updatedProject = await updateProjectAction(userId, projectId, updates);
             if (updatedProject) {
               setProjects(prev => prev.map(p => p.id === projectId ? updatedProject : p));
               toast({ title: "Project updated!" });
@@ -84,7 +84,7 @@ export function ProjectClientPage({ projects: initialProjects, tasks }: { projec
   const handleDeleteProject = (projectId: string) => {
       startTransition(async () => {
           try {
-              await deleteProjectAction(projectId);
+              await deleteProjectAction(userId, projectId);
               setProjects(prev => prev.filter(p => p.id !== projectId));
               toast({ title: 'Project deleted' });
               setSelectedProject(null);
@@ -210,6 +210,7 @@ export function ProjectClientPage({ projects: initialProjects, tasks }: { projec
           onUpdate={handleUpdateProject}
           onDelete={handleDeleteProject}
           isPending={isPending}
+          userId={userId}
         />
       )}
     </>

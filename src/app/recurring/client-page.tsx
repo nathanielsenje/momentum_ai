@@ -23,9 +23,10 @@ import { useToast } from '@/hooks/use-toast';
 
 interface RecurringTasksClientPageProps {
   tasks: RecurringTask[];
+  userId: string;
 }
 
-export function RecurringTasksClientPage({ tasks: initialTasks }: RecurringTasksClientPageProps) {
+export function RecurringTasksClientPage({ tasks: initialTasks, userId }: RecurringTasksClientPageProps) {
   const [tasks, setTasks] = React.useState(initialTasks);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -41,7 +42,7 @@ export function RecurringTasksClientPage({ tasks: initialTasks }: RecurringTasks
             setTasks(currentTasks => currentTasks.map(task => 
                 task.id === taskId ? { ...task, lastCompleted: new Date().toISOString() } : task
             ));
-            await completeRecurringTaskAction(taskId);
+            await completeRecurringTaskAction(userId, taskId);
             toast({ title: 'Task marked as complete!' });
         } catch (error) {
             toast({
@@ -58,7 +59,7 @@ export function RecurringTasksClientPage({ tasks: initialTasks }: RecurringTasks
   const handleCreateRecurringTask = (taskData: Omit<RecurringTask, 'id' | 'lastCompleted'>) => {
     startTransition(async () => {
       try {
-        await createRecurringTaskAction(taskData);
+        await createRecurringTaskAction(userId, taskData);
         // The page will be revalidated by the server action, so we don't need to update state here.
         toast({ title: 'Recurring task created!' });
       } catch (error) {

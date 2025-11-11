@@ -3,8 +3,8 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Activity, Gauge, PanelLeft, FolderKanban, Settings, Sun, Moon, Repeat, CalendarDays, FileText } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Activity, Gauge, PanelLeft, FolderKanban, Settings, Sun, Moon, Repeat, CalendarDays, FileText, LogOut } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -25,16 +25,22 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/header';
-import { Avatar, AvatarFallback } from './ui/avatar';
-import { User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { useUser } from '@/firebase';
+import { getAuth, signOut } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { setOpen, isMobile } = useSidebar();
   const { setTheme, theme } = useTheme();
+  const { user, loading } = useUser();
+  const router = useRouter();
+  const { toast } = useToast();
 
   React.useEffect(() => {
     if (isMobile) {
@@ -42,6 +48,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, isMobile, setOpen]);
   
+  const handleSignOut = async () => {
+    const auth = getAuth();
+    await signOut(auth);
+    toast({ title: "Signed out successfully." });
+    router.push('/login');
+  };
+  
+  const isAuthPage = pathname === '/login' || pathname === '/signup';
+
+  if (isAuthPage) {
+    return (
+       <div className="flex min-h-screen flex-col items-center justify-center p-4">
+        {children}
+      </div>
+    )
+  }
+
   return (
     <>
       <Sidebar collapsible="icon">
@@ -138,8 +161,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     className="group-data-[collapsible=icon]:size-8"
                   >
                     <Avatar className="size-full">
+                       {user?.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || 'User'} />}
                         <AvatarFallback>
-                            <User />
+                            {user?.displayName?.charAt(0) || 'U'}
                         </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -149,8 +173,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     {theme === 'light' ? <Moon /> : <Sun />}
                     <span>Toggle Theme</span>
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut />
+                      <span>Sign Out</span>
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
                 </DropdownMenu>
+                 <div className="flex flex-col text-left group-data-[collapsible=icon]:hidden">
+                    <p className="text-sm font-semibold">{user?.displayName}</p>
+                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                </div>
             </div>
         </SidebarFooter>
       </Sidebar>

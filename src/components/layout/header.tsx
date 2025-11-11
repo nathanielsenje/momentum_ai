@@ -1,14 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import { Search, User } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useUser } from '@/firebase';
 
 export function Header() {
   const [currentTime, setCurrentTime] = React.useState<Date | null>(null);
+  const { user } = useUser();
 
   React.useEffect(() => {
     setCurrentTime(new Date()); // Set initial time on client
@@ -35,8 +37,9 @@ export function Header() {
         </div>
         <Separator orientation="vertical" className="h-10" />
         <Avatar>
+            <AvatarImage src={user?.photoURL || undefined} />
             <AvatarFallback>
-                <User />
+                {user?.displayName?.charAt(0) || 'U'}
             </AvatarFallback>
         </Avatar>
       </div>

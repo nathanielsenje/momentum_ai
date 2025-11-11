@@ -1,0 +1,136 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's profile information.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "photoURL": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the user's profile picture."
+        }
+      },
+      "required": ["displayName", "email"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A single to-do item.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "energyLevel": { "enum": ["Low", "Medium", "High"] },
+        "completed": { "type": "boolean" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "projectId": { "type": "string" },
+        "deadline": { "type": "string", "format": "date-time" },
+        "effort": { "type": "number" },
+        "focusType": { "enum": ["Creative", "Analytical", "Physical", "Administrative"] },
+        "priority": { "enum": ["Urgent & Important", "Important & Not Urgent", "Urgent & Not Important", "Not Urgent & Not Important"] }
+      },
+      "required": ["name", "energyLevel", "completed", "createdAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A collection of tasks.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "priority": { "enum": ["Low", "Medium", "High"] }
+      },
+      "required": ["name"]
+    },
+    "RecurringTask": {
+        "title": "Recurring Task",
+        "description": "A task that repeats on a schedule.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string" },
+            "frequency": { "enum": ["Weekly", "Monthly"] },
+            "lastCompleted": { "type": "string", "format": "date-time" }
+        },
+        "required": ["name", "frequency"]
+    },
+    "EnergyLog": {
+        "title": "Energy Log",
+        "description": "A daily log of a user's energy level.",
+        "type": "object",
+        "properties": {
+            "date": { "type": "string", "format": "date" },
+            "level": { "enum": ["Low", "Medium", "High"] }
+        },
+        "required": ["date", "level"]
+    },
+    "MomentumScore": {
+        "title": "Momentum Score",
+        "description": "A user's daily momentum score.",
+        "type": "object",
+        "properties": {
+            "date": { "type": "string", "format": "date" },
+            "score": { "type": "number" },
+            "streak": { "type": "number" },
+            "summary": { "type": "string" }
+        },
+        "required": ["date", "score", "streak", "summary"]
+    },
+    "DailyReport": {
+        "title": "Daily Report",
+        "description": "A daily summary of work.",
+        "type": "object",
+        "properties": {
+            "date": { "type": "string", "format": "date" },
+            "startTime": { "type": "string", "format": "date-time" },
+            "endTime": { "type": "string", "format": "date-time" },
+            "generatedReport": { "type": "string" },
+            "goals": { "type": "number" },
+            "completed": { "type": "number" },
+            "inProgress": { "type": "number" }
+        },
+        "required": ["date", "goals", "completed", "inProgress"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Stores user profile information."
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "Stores individual tasks for a user."
+    },
+    "/users/{userId}/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Stores projects for a user."
+    },
+    "/users/{userId}/recurring-tasks/{recurringTaskId}": {
+      "schema": { "$ref": "#/entities/RecurringTask" },
+      "description": "Stores recurring tasks for a user."
+    },
+    "/users/{userId}/energy-log/{energyLogId}": {
+      "schema": { "$ref": "#/entities/EnergyLog" },
+      "description": "Stores daily energy logs for a user."
+    },
+    "/users/{userId}/momentum/{momentumId}": {
+      "schema": { "$ref": "#/entities/MomentumScore" },
+      "description": "Stores daily momentum scores for a user."
+    },
+    "/users/{userId}/reports/{reportId}": {
+        "schema": { "$ref": "#/entities/DailyReport" },
+        "description": "Stores daily work reports for a user."
+    }
+  }
+}

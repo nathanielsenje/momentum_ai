@@ -46,9 +46,10 @@ interface TaskListProps {
     categories: Category[];
     todayEnergy?: EnergyLog;
     projects: Project[];
+    userId: string;
 }
 
-export function TaskList({ initialTasks, categories, projects, todayEnergy }: TaskListProps) {
+export function TaskList({ initialTasks, categories, projects, todayEnergy, userId }: TaskListProps) {
   const [tasks, setTasks] = React.useState(initialTasks);
   const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = React.useState<EnergyLevel | 'all'>('all');
@@ -73,7 +74,7 @@ export function TaskList({ initialTasks, categories, projects, todayEnergy }: Ta
 
     startTransition(async () => {
       try {
-        await completeTaskAction(id, completed);
+        await completeTaskAction(userId, id, completed);
         // Let server action handle revalidation
       } catch (error) {
         setTasks(originalTasks);
@@ -89,7 +90,7 @@ export function TaskList({ initialTasks, categories, projects, todayEnergy }: Ta
   const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => {
     startTransition(async () => {
       try {
-        await createTaskAction(taskData);
+        await createTaskAction(userId, taskData);
         toast({
           title: 'Task created!',
           description: 'Your new task has been added.',
@@ -107,7 +108,7 @@ export function TaskList({ initialTasks, categories, projects, todayEnergy }: Ta
   const handleUpdateTask = (taskId: string, taskData: Partial<Omit<Task, 'id'>>) => {
     startTransition(async () => {
         try {
-            await updateTaskAction(taskId, taskData);
+            await updateTaskAction(userId, taskId, taskData);
             toast({ title: "Task updated!" });
             setEditingTask(null);
         } catch (error) {
@@ -123,7 +124,7 @@ export function TaskList({ initialTasks, categories, projects, todayEnergy }: Ta
   const handleDeleteTask = (taskId: string) => {
     startTransition(async () => {
         try {
-            await deleteTaskAction(taskId);
+            await deleteTaskAction(userId, taskId);
             toast({ title: "Task deleted!" });
             setEditingTask(null);
         } catch (error) {

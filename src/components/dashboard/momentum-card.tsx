@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useTransition } from 'react';
-import { TrendingUp, BrainCircuit, Lightbulb } from 'lucide-react';
+import { TrendingUp, BrainCircuit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import type { MomentumScore, EnergyLog, Project, Task } from '@/lib/types';
@@ -15,20 +15,29 @@ interface MomentumCardProps {
     initialTodayEnergy?: EnergyLog;
     tasks: Task[];
     projects: Project[];
+    userId: string;
 }
 
-export function MomentumCard({ initialLatestMomentum, initialTodayEnergy, tasks, projects }: MomentumCardProps) {
+export function MomentumCard({ initialLatestMomentum, initialTodayEnergy, tasks, projects, userId }: MomentumCardProps) {
   const [latestMomentum, setLatestMomentum] = React.useState(initialLatestMomentum);
   const [todayEnergy, setTodayEnergy] = React.useState(initialTodayEnergy);
   const [suggestions, setSuggestions] = React.useState<ScoreAndSuggestTasksOutput>({
     suggestedTasks: [],
     routineSuggestion: undefined,
   });
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const handleEnergyChange = (newEnergy: EnergyLog) => {
     setTodayEnergy(newEnergy);
   };
+
+  React.useEffect(() => {
+    setLatestMomentum(initialLatestMomentum);
+  }, [initialLatestMomentum]);
+  
+  React.useEffect(() => {
+    setTodayEnergy(initialTodayEnergy);
+  }, [initialTodayEnergy]);
 
   React.useEffect(() => {
     if (todayEnergy) {
@@ -77,7 +86,7 @@ export function MomentumCard({ initialLatestMomentum, initialTodayEnergy, tasks,
                     <p className="text-xs text-muted-foreground">Day Streak</p>
                 </div>
             </div>
-            <EnergyInput todayEnergy={todayEnergy} onEnergyChange={handleEnergyChange} />
+            <EnergyInput todayEnergy={todayEnergy} onEnergyChange={handleEnergyChange} userId={userId} />
         </div>
 
         {suggestions.routineSuggestion && (
