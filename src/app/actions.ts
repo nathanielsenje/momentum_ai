@@ -26,16 +26,8 @@ import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/sug
 import { calculateDailyMomentumScore } from '@/ai/flows/calculate-daily-momentum-score';
 import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
 import { subDays, format, isSameDay, parseISO } from 'date-fns';
-import { getFirestore } from 'firebase/firestore';
-import { initializeFirebase } from '@/firebase';
+import { getDb } from '@/firebase/server-init';
 
-// Helper to get DB instance. In a real app, you might get this from a server-side context.
-// For simplicity, we initialize it here. This is safe on the server.
-function getDb() {
-  // This is a simplified example. In a real app, you'd manage the Firebase app instance more carefully.
-  const { firestore } = initializeFirebase();
-  return firestore;
-}
 
 export async function setEnergyLevelAction(userId: string, level: EnergyLevel) {
   setTodayEnergy(getDb(), userId, level);
@@ -43,11 +35,12 @@ export async function setEnergyLevelAction(userId: string, level: EnergyLevel) {
 }
 
 export async function createTaskAction(userId: string, data: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>) {
-  addTask(getDb(), userId, data);
+  const newTask = await addTask(getDb(), userId, data);
   revalidatePath('/');
   revalidatePath('/projects');
   revalidatePath('/reports');
   revalidatePath('/weekly-planner');
+  return newTask;
 }
 
 export async function updateTaskAction(userId: string, taskId: string, data: Partial<Omit<Task, 'id'>>) {
@@ -142,10 +135,11 @@ export async function getFlowAlignmentReport(userId: string) {
     return result;
 }
 
-export async function createProjectAction(userId: string, name: string) {
-    addProject(getDb(), userId, { name, priority: 'Medium' });
+export async function createProjectAction(userId: string, name: string): Promise<Project> {
+    const newProject = await addProject(getDb(), userId, { name, priority: 'Medium' });
     revalidatePath('/projects');
     revalidatePath('/');
+    return newProject;
 }
 
 export async function updateProjectAction(userId: string, projectId: string, updates: Partial<Project>) {
@@ -160,7 +154,7 @@ export async function deleteProjectAction(userId: string, projectId: string) {
     revalidatePath('/');
 }
 
-export async function createRecurringTaskAction(userId: string, data: Omit<RecurringTask, 'id' | 'lastCompleted'>) {
+export async function createRecurringTaskAction(userId: string, data: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>) {
     addRecurringTask(getDb(), userId, data);
     revalidatePath('/recurring');
 }
@@ -171,9 +165,10 @@ export async function completeRecurringTaskAction(userId: string, taskId: string
 }
 
 export async function updateReportAction(userId: string, updates: Partial<DailyReport>) {
-  updateTodaysReport(getDb(), userId, updates);
+  const updatedReport = await updateTodaysReport(getDb(), userId, updates);
   revalidatePath('/');
   revalidatePath('/reports');
+  return updatedReport;
 }
 
 export async function updateUserProfileAction(userId: string, updates: { displayName: string }) {
