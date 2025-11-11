@@ -52,17 +52,25 @@ const formSchema = z
 
 type FormValues = z.infer<typeof formSchema>;
 
-function SignupClientPage() {
+export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
+  const { user, loading: userLoading } = useUser();
   const [isPending, startTransition] = React.useTransition();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { displayName: '', email: '', password: '', confirmPassword: '' },
   });
+
+  React.useEffect(() => {
+    if (!userLoading && user) {
+      router.push('/');
+    }
+  }, [user, userLoading, router]);
+
   
   const createSampleData = async (userId: string) => {
     if (!firestore) return;
@@ -127,6 +135,7 @@ function SignupClientPage() {
 
 
   const onSubmit = (data: FormValues) => {
+    if (!auth) return;
     startTransition(async () => {
       try {
         const userCredential = await createUserWithEmailAndPassword(
@@ -150,6 +159,7 @@ function SignupClientPage() {
   };
 
   const handleGoogleSignIn = () => {
+    if (!auth) return;
     startTransition(async () => {
       try {
         const provider = new GoogleAuthProvider();
@@ -167,6 +177,29 @@ function SignupClientPage() {
       }
     });
   };
+
+  if (userLoading || !auth || !firestore) {
+      return (
+          <Card className="w-full max-w-sm">
+              <CardHeader className="text-center">
+                  <Skeleton className="mx-auto h-10 w-10 rounded-full" />
+                  <Skeleton className="h-6 w-3/4 mx-auto mt-2" />
+                  <Skeleton className="h-4 w-full mx-auto" />
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+              </CardContent>
+                <CardFooter className="justify-center">
+                  <Skeleton className="h-4 w-1/2" />
+              </CardFooter>
+          </Card>
+      );
+  }
 
   return (
     <Card className="w-full max-w-sm">
@@ -259,33 +292,4 @@ function SignupClientPage() {
       </CardFooter>
     </Card>
   );
-}
-
-export default function SignupPage() {
-    const { user, loading } = useUser();
-
-    if (loading) {
-        return (
-            <Card className="w-full max-w-sm">
-                <CardHeader className="text-center">
-                    <Skeleton className="mx-auto h-10 w-10 rounded-full" />
-                    <Skeleton className="h-6 w-3/4 mx-auto mt-2" />
-                    <Skeleton className="h-4 w-full mx-auto" />
-                </CardHeader>
-                <CardContent className="grid gap-4">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                </CardContent>
-                 <CardFooter className="justify-center">
-                    <Skeleton className="h-4 w-1/2" />
-                </CardFooter>
-            </Card>
-        );
-    }
-
-    return <SignupClientPage />;
 }

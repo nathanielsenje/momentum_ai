@@ -42,10 +42,11 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-function LoginClientPage() {
+export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const { user, loading: userLoading } = useUser();
   const [isPending, startTransition] = React.useTransition();
 
   const form = useForm<FormValues>({
@@ -53,7 +54,15 @@ function LoginClientPage() {
     defaultValues: { email: '', password: '' },
   });
 
+  React.useEffect(() => {
+    if (!userLoading && user) {
+      router.push('/');
+    }
+  }, [user, userLoading, router]);
+
+
   const onSubmit = (data: FormValues) => {
+    if (!auth) return;
     startTransition(async () => {
       try {
         await signInWithEmailAndPassword(auth, data.email, data.password);
@@ -70,6 +79,7 @@ function LoginClientPage() {
   };
 
   const handleGoogleSignIn = () => {
+    if (!auth) return;
     startTransition(async () => {
       try {
         const provider = new GoogleAuthProvider();
@@ -85,6 +95,27 @@ function LoginClientPage() {
       }
     });
   };
+  
+  if (userLoading || !auth) {
+      return (
+          <Card className="w-full max-w-sm">
+              <CardHeader className="text-center">
+                  <Skeleton className="mx-auto h-10 w-10 text-primary" />
+                  <Skeleton className="h-6 w-3/4 mx-auto mt-2" />
+                  <Skeleton className="h-4 w-full mx-auto" />
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+              </CardContent>
+                <CardFooter className="justify-center">
+                  <Skeleton className="h-4 w-1/2" />
+              </CardFooter>
+          </Card>
+      );
+  }
 
   return (
     <Card className="w-full max-w-sm">
@@ -151,31 +182,4 @@ function LoginClientPage() {
       </CardFooter>
     </Card>
   );
-}
-
-export default function LoginPage() {
-    const { user, loading } = useUser();
-
-    if (loading) {
-        return (
-            <Card className="w-full max-w-sm">
-                <CardHeader className="text-center">
-                    <Skeleton className="mx-auto h-10 w-10 rounded-full" />
-                    <Skeleton className="h-6 w-3/4 mx-auto mt-2" />
-                    <Skeleton className="h-4 w-full mx-auto" />
-                </CardHeader>
-                <CardContent className="grid gap-4">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                </CardContent>
-                 <CardFooter className="justify-center">
-                    <Skeleton className="h-4 w-1/2" />
-                </CardFooter>
-            </Card>
-        );
-    }
-
-    return <LoginClientPage />;
 }
