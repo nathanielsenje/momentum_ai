@@ -98,9 +98,12 @@ export function ProjectClientPage() {
         try {
             const updatedProject = await updateProjectAction(user.uid, projectId, updates);
             if (updatedProject) {
-              setProjects(prev => prev.map(p => p.id === projectId ? updatedProject : p));
+              setProjects(prev => prev.map(p => p.id === projectId ? { ...p, ...updatedProject} : p));
+              if(selectedProject) {
+                setSelectedProject(prev => prev ? { ...prev, ...updatedProject } : null)
+              }
               toast({ title: "Project updated!" });
-              setSelectedProject(null);
+              
             }
         } catch (error) {
             toast({

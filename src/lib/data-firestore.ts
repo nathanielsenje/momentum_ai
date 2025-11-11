@@ -133,8 +133,7 @@ export async function addProject(db: Firestore, userId: string, projectData: Omi
     const projectsCol = collection(db, 'users', userId, 'projects');
     const dataWithUserId = { ...projectData, userId };
     const docRef = await addDoc(projectsCol, dataWithUserId);
-    const newProject = await getDoc(docRef);
-    return { id: newProject.id, ...newProject.data() } as Project;
+    return { id: docRef.id, ...dataWithUserId };
 }
 
 export async function updateProject(db: Firestore, userId: string, projectId: string, updates: Partial<Project>): Promise<Project | undefined> {
