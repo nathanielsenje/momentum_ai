@@ -50,7 +50,7 @@ export async function addTask(db: Firestore, userId: string, taskData: Omit<Task
 
     const docRef = await addDoc(tasksCol, newTaskData);
 
-    return { ...taskData, id: docRef.id, completed: false, completedAt: null, createdAt: new Date().toISOString() };
+    return { id: docRef.id, ...newTaskData };
 }
 
 export async function updateTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<Task, 'id'>>): Promise<Task | undefined> {
@@ -131,7 +131,8 @@ export async function getProjects(db: Firestore, userId: string): Promise<Projec
 export async function addProject(db: Firestore, userId: string, projectData: Omit<Project, 'id'>): Promise<Project> {
     const projectsCol = collection(db, 'users', userId, 'projects');
     const docRef = await addDoc(projectsCol, projectData);
-    return { ...projectData, id: docRef.id };
+    const newProject = await getDoc(docRef);
+    return { id: newProject.id, ...newProject.data() } as Project;
 }
 
 export async function updateProject(db: Firestore, userId: string, projectId: string, updates: Partial<Project>): Promise<Project | undefined> {
