@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -44,7 +45,7 @@ const priorityColors: Record<EisenhowerMatrix, string> = {
 
 export function TaskList() {
   const { user } = useUser();
-  const { tasks: initialTasks, categories, projects, todayEnergy } = useDashboardData();
+  const { tasks: initialTasks, categories, projects, todayEnergy, setTasks: setAllTasks } = useDashboardData();
   const userId = user!.uid;
 
   const [tasks, setTasks] = React.useState(initialTasks);
@@ -59,33 +60,38 @@ export function TaskList() {
   }, [initialTasks]);
 
   const handleComplete = (id: string, completed: boolean) => {
-    const originalTasks = tasks;
-    setTasks(prevTasks =>
+    const optimisticUpdate = (prevTasks: Task[]) =>
       prevTasks.map(task =>
         task.id === id
           ? { ...task, completed, completedAt: completed ? new Date().toISOString() : null }
           : task
-      )
-    );
+      );
+
+    setTasks(optimisticUpdate);
+    setAllTasks(optimisticUpdate);
 
     startTransition(async () => {
       try {
         await completeTaskAction(userId, id, completed);
       } catch (error) {
-        setTasks(originalTasks);
         toast({
           variant: 'destructive',
           title: 'Uh oh! Something went wrong.',
-          description: 'There was a problem updating your task.',
+          description: 'There was a problem updating your task. Reverting changes.',
         });
+        setTasks(initialTasks); // Revert from original state
+        setAllTasks(initialTasks);
       }
     });
   };
 
-  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => {
+  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>) => {
     startTransition(async () => {
       try {
-        await createTaskAction(userId, taskData);
+        const newTask = await createTaskAction(userId, taskData);
+        const optimisticUpdate = (prev: Task[]) => [...prev, newTask];
+        setTasks(optimisticUpdate);
+        setAllTasks(optimisticUpdate);
         toast({
           title: 'Task created!',
           description: 'Your new task has been added.',
@@ -104,6 +110,9 @@ export function TaskList() {
     startTransition(async () => {
         try {
             await updateTaskAction(userId, taskId, taskData);
+            const optimisticUpdate = (prev: Task[]) => prev.map(t => t.id === taskId ? {...t, ...taskData} : t);
+            setTasks(optimisticUpdate);
+            setAllTasks(optimisticUpdate);
             toast({ title: "Task updated!" });
             setEditingTask(null);
         } catch (error) {
@@ -120,6 +129,9 @@ export function TaskList() {
     startTransition(async () => {
         try {
             await deleteTaskAction(userId, taskId);
+            const optimisticUpdate = (prev: Task[]) => prev.filter(t => t.id !== taskId);
+            setTasks(optimisticUpdate);
+            setAllTasks(optimisticUpdate);
             toast({ title: "Task deleted!" });
             setEditingTask(null);
         } catch (error) {

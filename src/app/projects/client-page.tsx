@@ -38,7 +38,7 @@ type ProjectFormValues = z.infer<typeof projectFormSchema>;
 export function ProjectClientPage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
-  const { projects: initialProjects, tasks, loading: dataLoading } = useDashboardData();
+  const { projects: initialProjects, tasks, loading: dataLoading, setProjects: setAllProjects } = useDashboardData();
   
   const [projects, setProjects] = React.useState<Project[]>(initialProjects);
   const [isPending, startTransition] = useTransition();
@@ -63,10 +63,15 @@ export function ProjectClientPage() {
   const onSubmit = (data: ProjectFormValues) => {
     if (!user) return;
     startTransition(async () => {
-      const newProject = await createProjectAction(user.uid, data.name);
-      setProjects(prev => [...prev, newProject]);
-      toast({ title: 'Project created!' });
-      form.reset();
+      try {
+        const newProject = await createProjectAction(user.uid, data.name);
+        setProjects(prev => [...prev, newProject]);
+        setAllProjects(prev => [...prev, newProject]); // Update global state
+        toast({ title: 'Project created!' });
+        form.reset();
+      } catch (e) {
+        toast({ variant: 'destructive', title: 'Failed to create project.' });
+      }
     });
   };
 
@@ -74,9 +79,13 @@ export function ProjectClientPage() {
     if (!user) return;
     startTransition(async () => {
       updateProjectAction(user.uid, projectId, updates);
-      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, ...updates } : p));
+      const updatedProjects = prev => prev.map(p => p.id === projectId ? { ...p, ...updates } : p);
+      setProjects(updatedProjects);
+      setAllProjects(updatedProjects);
       toast({ title: "Project updated!" });
-      setSelectedProject(null);
+      if (selectedProject?.id === projectId) {
+        setSelectedProject(prev => prev ? { ...prev, ...updates } : null);
+      }
     });
   };
 
@@ -84,7 +93,9 @@ export function ProjectClientPage() {
       if (!user) return;
       startTransition(async () => {
           deleteProjectAction(user.uid, projectId);
-          setProjects(prev => prev.filter(p => p.id !== projectId));
+          const updatedProjects = prev => prev.filter(p => p.id !== projectId);
+          setProjects(updatedProjects);
+          setAllProjects(updatedProjects);
           toast({ title: 'Project deleted' });
           setSelectedProject(null);
       });
@@ -97,7 +108,17 @@ export function ProjectClientPage() {
   if (userLoading || dataLoading || !user) {
     return (
         <div className="flex flex-col gap-4">
-            <Skeleton className="h-32 w-full" />
+            <Card>
+                <CardHeader>
+                    <CardTitle>Add New Project</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex gap-2">
+                        <Skeleton className="h-10 flex-grow" />
+                        <Skeleton className="h-10 w-32" />
+                    </div>
+                </CardContent>
+            </Card>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Skeleton className="h-48 w-full" />
                 <Skeleton className="h-48 w-full" />

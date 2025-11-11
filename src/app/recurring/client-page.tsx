@@ -22,17 +22,15 @@ import type { RecurringTask } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { getRecurringTasks } from '@/lib/data-firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 export function RecurringTasksClientPage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
-  const { loading: dataLoading, tasks: allTasks } = useDashboardData(); // We just need a trigger
+  const { recurringTasks: initialTasks, setRecurringTasks, loading: dataLoading } = useDashboardData();
 
-  const [tasks, setTasks] = React.useState<RecurringTask[]>([]);
-  const [isFetching, setIsFetching] = React.useState(true);
+  const [tasks, setTasks] = React.useState<RecurringTask[]>(initialTasks);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
@@ -43,50 +41,40 @@ export function RecurringTasksClientPage() {
   }, [user, userLoading, router]);
 
   React.useEffect(() => {
-    if (user) {
-      setIsFetching(true);
-      getRecurringTasks(user.uid)
-        .then(tasksData => {
-          setTasks(tasksData);
-          setIsFetching(false);
-        })
-        .catch(error => {
-          console.error("Error fetching recurring tasks:", error);
-          setIsFetching(false);
-        });
-    }
-  }, [user, allTasks]); // Refetch if allTasks changes
+    setTasks(initialTasks);
+  }, [initialTasks]);
 
   const handleCompleteTask = (taskId: string) => {
     if (!user) return;
-    const originalTasks = tasks;
+    const optimisticUpdate = (currentTasks: RecurringTask[]) => currentTasks.map(task => 
+        task.id === taskId ? { ...task, lastCompleted: new Date().toISOString() } : task
+    );
+    setTasks(optimisticUpdate);
+    setRecurringTasks(optimisticUpdate);
+
     startTransition(async () => {
         try {
-            // Optimistic update
-            setTasks(currentTasks => currentTasks.map(task => 
-                task.id === taskId ? { ...task, lastCompleted: new Date().toISOString() } : task
-            ));
-            completeRecurringTaskAction(user.uid, taskId);
+            await completeRecurringTaskAction(user.uid, taskId);
             toast({ title: 'Task marked as complete!' });
         } catch (error) {
             toast({
                 variant: 'destructive',
                 title: 'Uh oh! Something went wrong.',
-                description: 'There was a problem completing the task.',
+                description: 'There was a problem completing the task. Reverting changes.',
             });
-            // Revert optimistic update
-            setTasks(originalTasks);
+            // Revert optimistic update by refetching from global state
+            setTasks(initialTasks); 
         }
     });
   }
 
-  const handleCreateRecurringTask = (taskData: Omit<RecurringTask, 'id' | 'lastCompleted'>) => {
+  const handleCreateRecurringTask = (taskData: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>) => {
     if (!user) return;
     startTransition(async () => {
       try {
-        createRecurringTaskAction(user.uid, taskData);
-        const updatedTasks = await getRecurringTasks(user.uid);
+        const updatedTasks = await createRecurringTaskAction(user.uid, taskData);
         setTasks(updatedTasks);
+        setRecurringTasks(updatedTasks);
         toast({ title: 'Recurring task created!' });
       } catch (error) {
         toast({
@@ -161,7 +149,7 @@ export function RecurringTasksClientPage() {
     );
   };
   
-  if (userLoading || dataLoading || isFetching || !user) {
+  if (userLoading || dataLoading || !user) {
     return (
          <div className="flex flex-col gap-4">
             <Skeleton className="h-20 w-full" />

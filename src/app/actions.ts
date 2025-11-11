@@ -18,6 +18,7 @@ import {
   deleteProject,
   addRecurringTask,
   updateRecurringTask,
+  getRecurringTasks,
   updateTodaysReport,
   updateUserProfile,
 } from '@/lib/data-firestore-server';
@@ -37,7 +38,7 @@ export async function setEnergyLevelAction(userId: string, level: EnergyLevel) {
   revalidatePath('/');
 }
 
-export async function createTaskAction(userId: string, data: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>) {
+export async function createTaskAction(userId: string, data: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>): Promise<Task> {
   const db = getDb();
   const newTask = await addTask(db, userId, data);
   revalidatePath('/');
@@ -159,9 +160,13 @@ export async function deleteProjectAction(userId: string, projectId: string) {
     revalidatePath('/');
 }
 
-export async function createRecurringTaskAction(userId: string, data: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>) {
-    await addRecurringTask(getDb(), userId, data);
+export async function createRecurringTaskAction(userId: string, data: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>): Promise<RecurringTask[]> {
+    const db = getDb();
+    await addRecurringTask(db, userId, data);
     revalidatePath('/recurring');
+    // Refetch tasks to return the updated list
+    const tasks = await getRecurringTasks(db, userId);
+    return tasks;
 }
 
 export async function completeRecurringTaskAction(userId: string, taskId: string) {
