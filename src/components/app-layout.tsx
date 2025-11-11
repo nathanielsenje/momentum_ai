@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, Gauge, PanelLeft, FolderKanban, Settings, Sun, Moon, Repeat, CalendarDays, FileText, LogOut } from 'lucide-react';
+import { Activity, Gauge, PanelLeft, FolderKanban, Settings, Sun, Moon, Repeat, CalendarDays, FileText, LogOut, User as UserIcon } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -58,7 +58,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const isAuthPage = pathname === '/login' || pathname === '/signup';
 
   if (isAuthPage) {
-    return <>{children}</>;
+    return (
+       <div className="flex min-h-screen items-center justify-center bg-background p-4">
+          {children}
+        </div>
+    );
   }
 
   return (
@@ -165,6 +169,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="right" align="end">
+                    <DropdownMenuItem onClick={() => router.push('/profile')}>
+                      <UserIcon />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
                     {theme === 'light' ? <Moon /> : <Sun />}
                     <span>Toggle Theme</span>

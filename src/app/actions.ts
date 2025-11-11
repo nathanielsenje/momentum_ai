@@ -1,3 +1,4 @@
+
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -18,6 +19,7 @@ import {
   addRecurringTask,
   updateRecurringTask,
   updateTodaysReport,
+  updateUserProfile,
 } from '@/lib/data-firestore';
 import type { DailyReport, EnergyLevel, Project, RecurringTask, Task, ScoreAndSuggestTasksInput } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
@@ -177,4 +179,11 @@ export async function updateReportAction(userId: string, updates: Partial<DailyR
   revalidatePath('/');
   revalidatePath('/reports');
   return report;
+}
+
+export async function updateUserProfileAction(userId: string, updates: { displayName: string }) {
+  const db = getDb();
+  await updateUserProfile(db, userId, updates);
+  revalidatePath('/profile');
+  revalidatePath('/'); // To update name in sidebar etc.
 }

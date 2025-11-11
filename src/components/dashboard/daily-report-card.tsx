@@ -12,12 +12,12 @@ import type { DailyReport } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 
 interface DailyReportCardProps {
-  initialReport: DailyReport;
+  initialReport: DailyReport | null;
   userId: string;
 }
 
 export function DailyReportCard({ initialReport, userId }: DailyReportCardProps) {
-  const [report, setReport] = React.useState(initialReport);
+  const [report, setReport] = React.useState<DailyReport | null>(initialReport);
   const [clientFormattedTimes, setClientFormattedTimes] = React.useState({ startTime: 'Not set', endTime: 'Not set' });
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -28,10 +28,10 @@ export function DailyReportCard({ initialReport, userId }: DailyReportCardProps)
 
   React.useEffect(() => {
     setClientFormattedTimes({
-      startTime: initialReport.startTime ? format(parseISO(initialReport.startTime), 'p') : 'Not set',
-      endTime: initialReport.endTime ? format(parseISO(initialReport.endTime), 'p') : 'Not set',
+      startTime: initialReport?.startTime ? format(parseISO(initialReport.startTime), 'p') : 'Not set',
+      endTime: initialReport?.endTime ? format(parseISO(initialReport.endTime), 'p') : 'Not set',
     });
-  }, [initialReport.startTime, initialReport.endTime]);
+  }, [initialReport?.startTime, initialReport?.endTime]);
 
   const handleTimeTracking = (action: 'start' | 'end') => {
     startTransition(async () => {
@@ -48,7 +48,7 @@ export function DailyReportCard({ initialReport, userId }: DailyReportCardProps)
   };
 
   const handleCopyToClipboard = () => {
-    if (report.generatedReport) {
+    if (report?.generatedReport) {
       navigator.clipboard.writeText(report.generatedReport);
       toast({ title: 'Report copied to clipboard!' });
     } else {
@@ -75,7 +75,7 @@ export function DailyReportCard({ initialReport, userId }: DailyReportCardProps)
                 size="sm"
                 variant="outline"
                 onClick={() => handleTimeTracking('start')}
-                disabled={isPending || !!report.startTime}
+                disabled={isPending || !!report?.startTime}
               >
                 <Play className="mr-2 h-4 w-4" /> Start
               </Button>
@@ -83,7 +83,7 @@ export function DailyReportCard({ initialReport, userId }: DailyReportCardProps)
                 size="sm"
                 variant="outline"
                 onClick={() => handleTimeTracking('end')}
-                disabled={isPending || !report.startTime || !!report.endTime}
+                disabled={isPending || !report?.startTime || !!report?.endTime}
               >
                 <Square className="mr-2 h-4 w-4" /> End
               </Button>
@@ -98,15 +98,15 @@ export function DailyReportCard({ initialReport, userId }: DailyReportCardProps)
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                     <Goal className="size-4 text-amber-500" />
-                    <span><span className="font-bold text-foreground">{report.goals}</span> Goals</span>
+                    <span><span className="font-bold text-foreground">{report?.goals ?? 0}</span> Goals</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                     <CheckCircle2 className="size-4 text-green-500" />
-                    <span><span className="font-bold text-foreground">{report.completed}</span> Completed</span>
+                    <span><span className="font-bold text-foreground">{report?.completed ?? 0}</span> Completed</span>
                 </div>
                  <div className="flex items-center gap-1.5 text-muted-foreground">
                     <Hourglass className="size-4 text-blue-500" />
-                    <span><span className="font-bold text-foreground">{report.inProgress}</span> In Progress</span>
+                    <span><span className="font-bold text-foreground">{report?.inProgress ?? 0}</span> In Progress</span>
                 </div>
             </div>
           </div>
