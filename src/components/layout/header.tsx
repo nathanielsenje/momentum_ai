@@ -1,11 +1,9 @@
-
 'use client';
 
 import * as React from 'react';
 import { Search, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
-import { WeatherWidget } from './weather-widget';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
@@ -35,8 +33,6 @@ export function Header() {
               {currentTime ? format(currentTime, 'h:mm:ss a') : '...'}
           </span>
         </div>
-        <Separator orientation="vertical" className="h-10" />
-        <WeatherWidget />
         <Separator orientation="vertical" className="h-10" />
         <Avatar>
             <AvatarFallback>
