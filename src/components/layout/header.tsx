@@ -29,7 +29,7 @@ export function Header() {
             <span>
                 {currentTime ? format(currentTime, 'eeee, MMMM d') : 'Loading date...'}
             </span>
-            <span className="font-mono bg-muted/50 px-2 py-1 rounded-md text-foreground text-xs">
+            <span className="font-bold bg-muted/50 px-2 py-1 rounded-md text-foreground text-xs">
                 {currentTime ? format(currentTime, 'h:mm:ss a') : '...'}
             </span>
         </div>
