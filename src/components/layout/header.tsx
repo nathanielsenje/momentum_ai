@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { Search, CalendarDays } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 
@@ -24,7 +24,6 @@ export function Header() {
         <Input placeholder="Search..." className="pl-9" />
       </div>
       <div className="flex items-center gap-3 text-sm text-muted-foreground">
-        <CalendarDays className="h-5 w-5" />
         <div className="flex flex-col items-end">
             <span>
                 {currentTime ? format(currentTime, 'eeee, MMMM d') : 'Loading date...'}
