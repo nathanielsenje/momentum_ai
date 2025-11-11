@@ -1,5 +1,5 @@
 import "server-only";
-import { initializeApp, getApps, App, cert } from "firebase-admin/app";
+import { initializeApp, getApps, App, cert, applicationDefault } from "firebase-admin/app";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
 import { firebaseConfig } from "./config";
 
@@ -13,14 +13,26 @@ function getAdminApp(): App {
   }
 
   if (serviceAccount) {
-    // For production-like environments, use the service account
+    // For production with explicit service account
     return initializeApp({
       credential: cert(serviceAccount),
       projectId: firebaseConfig.projectId,
     });
+  } else if (process.env.FIREBASE_DEPLOY_AGENT) {
+    // For Firebase App Hosting - use Application Default Credentials
+    // Clear invalid GOOGLE_APPLICATION_CREDENTIALS if it exists
+    const originalGoogleCreds = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (originalGoogleCreds === '/dev/null' || originalGoogleCreds === '') {
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    }
+
+    return initializeApp({
+      credential: applicationDefault(),
+      projectId: firebaseConfig.projectId,
+    });
   } else {
-    // For local development, it can often connect without credentials
-    // if the user is authenticated via the Firebase CLI.
+    // For local development with Firebase CLI authentication
+    // This will use the emulator or require Firebase login
     return initializeApp({
       projectId: firebaseConfig.projectId,
     });
