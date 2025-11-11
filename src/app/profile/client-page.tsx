@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,11 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { useToast } from '@/hooks/use-toast';
 import { updateUserProfileAction } from '../actions';
 import { updateProfile } from 'firebase/auth';
+import type { Task, Category } from '@/lib/types';
+import { getTasks, getCategories } from '@/lib/data-firestore';
+import { TrendingUp, Zap, Tag, Calendar, CheckCircle } from 'lucide-react';
+import { getDay, parseISO, format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -24,10 +29,30 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
+const StatCard = ({ icon, title, value }: { icon: React.ElementType, title: string, value: string | number }) => {
+    const Icon = icon;
+    return (
+        <div className="flex items-center gap-4 p-4 rounded-lg bg-secondary/50">
+            <div className="p-2 bg-primary/10 rounded-md">
+                <Icon className="size-6 text-primary" />
+            </div>
+            <div>
+                <p className="text-sm text-muted-foreground">{title}</p>
+                <p className="text-lg font-semibold">{value}</p>
+            </div>
+        </div>
+    );
+};
+
 export function ProfileClientPage() {
-  const { user, loading } = useUser();
+  const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+  
+  const [tasks, setTasks] = React.useState<Task[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
+  const [dataLoading, setDataLoading] = React.useState(true);
   const [isPending, startTransition] = React.useTransition();
 
   const form = useForm<ProfileFormValues>({
@@ -38,25 +63,41 @@ export function ProfileClientPage() {
   });
 
   React.useEffect(() => {
-    if (!loading && !user) {
+    if (!userLoading && !user) {
       router.push('/login');
     }
+  }, [user, userLoading, router]);
+
+  React.useEffect(() => {
     if (user) {
       form.reset({ displayName: user.displayName || '' });
     }
-  }, [user, loading, router, form]);
+  }, [user, form]);
+  
+  React.useEffect(() => {
+      if (user && firestore) {
+          setDataLoading(true);
+          Promise.all([
+              getTasks(firestore, user.uid),
+              getCategories(),
+          ]).then(([tasks, cats]) => {
+              setTasks(tasks);
+              setCategories(cats);
+              setDataLoading(false);
+          }).catch(error => {
+              console.error("Error fetching profile data:", error);
+              setDataLoading(false);
+          });
+      }
+  }, [user, firestore]);
 
   const onSubmit = (data: ProfileFormValues) => {
     if (!user) return;
 
     startTransition(async () => {
       try {
-        // Update Firebase Auth profile
         await updateProfile(user, { displayName: data.displayName });
-        
-        // Update Firestore user document
         await updateUserProfileAction(user.uid, { displayName: data.displayName });
-
         toast({
           title: 'Profile updated!',
           description: 'Your display name has been changed.',
@@ -72,70 +113,152 @@ export function ProfileClientPage() {
     });
   };
 
-  if (loading || !user) {
+  const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || 'N/A';
+
+  const completedTasks = tasks.filter(task => task.completed);
+  const recentTasks = completedTasks.sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime()).slice(0, 5);
+
+  const stats = React.useMemo(() => {
+    if (completedTasks.length === 0) {
+      return {
+        totalCompleted: 0,
+        productiveDay: 'N/A',
+        energySweetSpot: 'N/A',
+        topCategory: 'N/A',
+      };
+    }
+
+    const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+    completedTasks.forEach(task => {
+      if (task.completedAt) {
+        const dayIndex = getDay(parseISO(task.completedAt));
+        dayCounts[dayIndex]++;
+      }
+    });
+    const mostProductiveDayIndex = dayCounts.indexOf(Math.max(...dayCounts));
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    const energyCounts = completedTasks.reduce((acc, task) => {
+        acc[task.energyLevel] = (acc[task.energyLevel] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+    const energySweetSpot = Object.keys(energyCounts).reduce((a, b) => energyCounts[a] > energyCounts[b] ? a : b);
+
+    const categoryCounts = completedTasks.reduce((acc, task) => {
+        acc[task.category] = (acc[task.category] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+    const topCategory = Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b);
+
+    return {
+      totalCompleted: completedTasks.length,
+      productiveDay: daysOfWeek[mostProductiveDayIndex],
+      energySweetSpot,
+      topCategory: getCategoryName(topCategory),
+    };
+  }, [completedTasks, categories]);
+
+
+  if (userLoading || !user || dataLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-1/4" />
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-24 w-24 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-64" />
-          </div>
+        <div className="grid gap-6 md:grid-cols-3">
+            <div className="md:col-span-1 space-y-6">
+                <Skeleton className="h-64 w-full" />
+                <Skeleton className="h-48 w-full" />
+            </div>
+            <div className="md:col-span-2 space-y-6">
+                <Skeleton className="h-80 w-full" />
+                <Skeleton className="h-64 w-full" />
+            </div>
         </div>
-        <Skeleton className="h-40 w-full max-w-lg" />
-      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold">Your Profile</h1>
-        <p className="text-muted-foreground">
-          View and manage your account details.
-        </p>
-      </header>
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Profile Details</CardTitle>
-          <CardDescription>
-            This information will be displayed across the application.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={user.photoURL || undefined} />
-              <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-lg font-semibold">{user.displayName}</p>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
-            </div>
-          </div>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="displayName"
-                render={({ field }) => (
-                  <FormItem>
-                    <Label htmlFor="displayName">Display Name</Label>
-                    <FormControl>
-                      <Input id="displayName" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" disabled={isPending}>
-                {isPending ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+    <div className="grid gap-6 md:grid-cols-3">
+        <div className="md:col-span-1 space-y-6">
+             <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-4">
+                        <Avatar className="h-24 w-24">
+                        <AvatarImage src={user.photoURL || undefined} />
+                        <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                        <p className="text-xl font-semibold">{user.displayName}</p>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="displayName"
+                            render={({ field }) => (
+                            <FormItem>
+                                <Label htmlFor="displayName">Display Name</Label>
+                                <FormControl>
+                                <Input id="displayName" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <Button type="submit" disabled={isPending} className="w-full">
+                            {isPending ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                        </form>
+                    </Form>
+                </CardContent>
+            </Card>
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="text-primary" />
+                        Productivity Stats
+                    </CardTitle>
+                </CardHeader>
+                 <CardContent className="grid grid-cols-1 gap-4">
+                    <StatCard icon={CheckCircle} title="Total Tasks Completed" value={stats.totalCompleted} />
+                    <StatCard icon={Calendar} title="Most Productive Day" value={stats.productiveDay} />
+                    <StatCard icon={Zap} title="Energy Sweet Spot" value={stats.energySweetSpot} />
+                    <StatCard icon={Tag} title="Top Category" value={stats.topCategory} />
+                </CardContent>
+            </Card>
+        </div>
+
+        <div className="md:col-span-2">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                    <CardDescription>Your last 5 completed tasks.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                   {recentTasks.length > 0 ? (
+                        <ul className="space-y-3">
+                            {recentTasks.map(task => (
+                                <li key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
+                                    <div>
+                                        <p className="font-medium text-sm">{task.name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Completed on {format(parseISO(task.completedAt!), 'MMM d, yyyy')}
+                                        </p>
+                                    </div>
+                                    <Badge variant="secondary">{getCategoryName(task.category)}</Badge>
+                                </li>
+                            ))}
+                        </ul>
+                   ) : (
+                       <div className="text-center text-muted-foreground py-12">
+                           <p>No completed tasks yet. Go get something done!</p>
+                       </div>
+                   )}
+                </CardContent>
+            </Card>
+        </div>
     </div>
   );
 }

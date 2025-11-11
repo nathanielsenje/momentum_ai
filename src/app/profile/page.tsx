@@ -8,16 +8,15 @@ export default function ProfilePage() {
   return (
     <React.Suspense
       fallback={
-        <div className="space-y-6">
-          <Skeleton className="h-8 w-1/4" />
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-24 w-24 rounded-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-64" />
+        <div className="grid gap-6 md:grid-cols-3">
+            <div className="md:col-span-1 space-y-6">
+                <Skeleton className="h-64 w-full" />
+                <Skeleton className="h-48 w-full" />
             </div>
-          </div>
-          <Skeleton className="h-40 w-full max-w-lg" />
+            <div className="md:col-span-2 space-y-6">
+                <Skeleton className="h-80 w-full" />
+                <Skeleton className="h-64 w-full" />
+            </div>
         </div>
       }
     >
