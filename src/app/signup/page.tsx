@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -11,6 +12,7 @@ import {
   updateProfile,
   GoogleAuthProvider,
   signInWithPopup,
+  User as FirebaseUser,
 } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,7 +34,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/logo';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, useUser } from '@/firebase';
 import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -111,7 +113,7 @@ function SignupClientPage() {
   };
 
 
-  const handleUserCreation = async (user: import('firebase/auth').User, displayName: string | null) => {
+  const handleUserCreation = async (user: FirebaseUser, displayName: string | null) => {
     if (firestore && user) {
         const userRef = doc(firestore, 'users', user.uid);
         await setDoc(userRef, {
@@ -260,9 +262,9 @@ function SignupClientPage() {
 }
 
 export default function SignupPage() {
-    const auth = useAuth();
+    const { user, loading } = useUser();
 
-    if (!auth) {
+    if (loading) {
         return (
             <Card className="w-full max-w-sm">
                 <CardHeader className="text-center">
@@ -271,6 +273,7 @@ export default function SignupPage() {
                     <Skeleton className="h-4 w-full mx-auto" />
                 </CardHeader>
                 <CardContent className="grid gap-4">
+                    <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
@@ -286,5 +289,3 @@ export default function SignupPage() {
 
     return <SignupClientPage />;
 }
-
-    

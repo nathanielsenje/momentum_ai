@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -31,7 +32,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/logo';
-import { useAuth } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const formSchema = z.object({
@@ -153,9 +154,9 @@ function LoginClientPage() {
 }
 
 export default function LoginPage() {
-    const auth = useAuth();
+    const { user, loading } = useUser();
 
-    if (!auth) {
+    if (loading) {
         return (
             <Card className="w-full max-w-sm">
                 <CardHeader className="text-center">
@@ -164,6 +165,7 @@ export default function LoginPage() {
                     <Skeleton className="h-4 w-full mx-auto" />
                 </CardHeader>
                 <CardContent className="grid gap-4">
+                    <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
