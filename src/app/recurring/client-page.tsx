@@ -11,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -82,6 +81,10 @@ export function RecurringTasksClientPage({ tasks: initialTasks }: RecurringTasks
         return period === 'Weekly' ? isThisWeek(date, { weekStartsOn: 1 }) : isThisMonth(date);
     };
 
+    if (taskArray.length === 0) {
+        return <div className="text-center text-muted-foreground p-8">No {period.toLowerCase()} tasks yet.</div>
+    }
+
     return (
       <Table>
         <TableHeader>
@@ -132,41 +135,41 @@ export function RecurringTasksClientPage({ tasks: initialTasks }: RecurringTasks
   };
 
   return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between">
-        <div>
-            <CardTitle>Recurring Tasks</CardTitle>
-            <CardDescription>Manage your weekly and monthly tasks.</CardDescription>
+    <div className="flex flex-col gap-4">
+        <div className="flex justify-between items-center">
+            <div>
+                <h1 className="text-2xl font-bold">Recurring Tasks</h1>
+                <p className="text-muted-foreground">Manage your weekly and monthly tasks.</p>
+            </div>
+            <AddRecurringTaskDialog onSave={handleCreateRecurringTask} isPending={isPending}>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Recurring Task
+                </Button>
+            </AddRecurringTaskDialog>
         </div>
-        <AddRecurringTaskDialog onSave={handleCreateRecurringTask} isPending={isPending}>
-            <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Recurring Task
-            </Button>
-        </AddRecurringTaskDialog>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="weekly">
-          <TabsList>
-            <TabsTrigger value="weekly">Weekly</TabsTrigger>
-            <TabsTrigger value="monthly">Monthly</TabsTrigger>
-          </TabsList>
-          <TabsContent value="weekly">
-            {weeklyTasks.length > 0 ? (
-                renderTaskTable(weeklyTasks, 'Weekly')
-            ) : (
-                <div className="text-center text-muted-foreground p-8">No weekly tasks yet.</div>
-            )}
-          </TabsContent>
-          <TabsContent value="monthly">
-            {monthlyTasks.length > 0 ? (
-                renderTaskTable(monthlyTasks, 'Monthly')
-            ) : (
-                <div className="text-center text-muted-foreground p-8">No monthly tasks yet.</div>
-            )}
-            </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+
+        <div className="grid gap-6 md:grid-cols-1">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Weekly</CardTitle>
+                    <CardDescription>Tasks that reset every week.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {renderTaskTable(weeklyTasks, 'Weekly')}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Monthly</CardTitle>
+                    <CardDescription>Tasks that reset every month.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {renderTaskTable(monthlyTasks, 'Monthly')}
+                </CardContent>
+            </Card>
+        </div>
+    </div>
   );
 }
