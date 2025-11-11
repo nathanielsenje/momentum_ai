@@ -1,0 +1,103 @@
+
+'use client';
+
+import * as React from 'react';
+import { Sun, Cloud, CloudRain, CloudSnow, Wind, Loader2 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
+type WeatherCondition = 'Sunny' | 'Cloudy' | 'Rainy' | 'Snowy' | 'Windy';
+
+interface WeatherData {
+  condition: WeatherCondition;
+  temperature: number; // in Fahrenheit
+}
+
+const weatherIcons: Record<WeatherCondition, React.ElementType> = {
+  Sunny: Sun,
+  Cloudy: Cloud,
+  Rainy: CloudRain,
+  Snowy: CloudSnow,
+  Windy: Wind,
+};
+
+// Mock function to simulate a weather API call
+const getMockWeather = (lat: number, lon: number): Promise<WeatherData> => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const conditions: WeatherCondition[] = ['Sunny', 'Cloudy', 'Rainy', 'Snowy', 'Windy'];
+      const randomCondition = conditions[Math.floor(Math.random() * conditions.length)];
+      const randomTemp = Math.floor(Math.random() * (95 - 30 + 1)) + 30; // Temp between 30°F and 95°F
+      
+      // A little logic to make it seem more real
+      if (randomCondition === 'Snowy') {
+        resolve({ condition: randomCondition, temperature: Math.min(randomTemp, 32) });
+      } else if (randomCondition === 'Rainy') {
+         resolve({ condition: randomCondition, temperature: Math.min(randomTemp, 60) });
+      }
+      else {
+        resolve({ condition: randomCondition, temperature: randomTemp });
+      }
+    }, 1500); // Simulate network delay
+  });
+};
+
+
+export function WeatherWidget() {
+  const [weather, setWeather] = React.useState<WeatherData | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser.');
+      setIsLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const weatherData = await getMockWeather(latitude, longitude);
+          setWeather(weatherData);
+        } catch (apiError) {
+          setError('Could not fetch weather data.');
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      () => {
+        setError('Location access denied. Please enable it in your browser settings.');
+        setIsLoading(false);
+      }
+    );
+  }, []);
+
+  const WeatherIcon = weather ? weatherIcons[weather.condition] : null;
+
+  return (
+    <TooltipProvider>
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-muted/50">
+                    {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+                    {error && <Sun className="h-5 w-5 text-muted-foreground" />}
+                    {!isLoading && !error && WeatherIcon && (
+                        <WeatherIcon className="h-5 w-5 text-primary" />
+                    )}
+                </div>
+            </TooltipTrigger>
+            <TooltipContent>
+                {isLoading && <p>Fetching weather...</p>}
+                {error && <p>{error}</p>}
+                {weather && <p>{weather.condition}, {weather.temperature}°F</p>}
+            </TooltipContent>
+        </Tooltip>
+    </TooltipProvider>
+  );
+}
