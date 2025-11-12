@@ -4,7 +4,6 @@
 import * as React from 'react';
 import { useTransition } from 'react';
 import {
-  Clipboard,
   FileText,
   Play,
   Square,
@@ -36,7 +35,6 @@ import {
 import { generateReportAction } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Separator } from '../ui/separator';
-import { cn } from '@/lib/utils';
 
 export function DailyReportCard() {
   const { user } = useUser();
@@ -335,5 +333,3 @@ export function DailyReportCard() {
     </Card>
   );
 }
-
-    
