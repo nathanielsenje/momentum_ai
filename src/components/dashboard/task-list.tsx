@@ -27,7 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PomodoroContext } from './pomodoro-provider';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
-import { addTask, deleteTask, updateTask } from '@/lib/data-firestore';
+import { addTask, deleteTask, updateTask, calculateAndSaveMomentumScore } from '@/lib/data-firestore';
 import { onClientWrite, onTaskCompleted } from '@/app/actions';
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
@@ -56,10 +56,11 @@ export function TaskList() {
   const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
 
   const handleComplete = (id: string, completed: boolean) => {
-    let originalTasks: Task[] = [];
-    
+    let originalTasksState: Task[] = [];
+
+    // Optimistically update the UI
     setAllTasks(currentTasks => {
-        originalTasks = currentTasks;
+        originalTasksState = currentTasks; // Capture the state before the update
         return currentTasks.map(task =>
             task.id === id
             ? { ...task, completed, completedAt: completed ? new Date().toISOString() : null }
@@ -71,9 +72,11 @@ export function TaskList() {
         try {
             await updateTask(firestore, userId, id, { completed, completedAt: completed ? new Date().toISOString() : null });
             if (completed) {
-                await onTaskCompleted(userId);
+                // Now calculate momentum score on the client
+                await calculateAndSaveMomentumScore(firestore, userId);
+                await onTaskCompleted(userId); // Revalidate paths
             } else {
-                await onClientWrite();
+                await onClientWrite(); // Just revalidate
             }
         } catch(error) {
             toast({
@@ -81,7 +84,8 @@ export function TaskList() {
                 title: 'Uh oh! Something went wrong.',
                 description: 'There was a problem updating your task. Reverting changes.',
             });
-            setAllTasks(originalTasks);
+            // Revert to the captured state on error
+            setAllTasks(originalTasksState);
         }
     });
   };

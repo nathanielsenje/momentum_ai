@@ -1,4 +1,3 @@
-
 import {
   collection,
   doc,
@@ -17,9 +16,10 @@ import {
   Firestore,
 } from 'firebase/firestore';
 import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, RecurringTask, DailyReport } from './types';
-import { format } from 'date-fns';
+import { format, isSameDay, parseISO, subDays } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { calculateDailyMomentumScore as calculateDailyMomentumScoreFlow } from '@/ai/flows/calculate-daily-momentum-score';
 
 const categories: Category[] = [
   { "id": "work", "name": "Work" },
@@ -40,21 +40,7 @@ export async function getTasks(db: Firestore, userId: string): Promise<Task[]> {
 }
 
 export async function addTask(db: Firestore, userId: string, taskData: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>): Promise<Task> {
-    console.log('[DEBUG] addTask called', {
-        db: db ? 'DEFINED' : 'UNDEFINED',
-        userId: userId || 'UNDEFINED',
-        taskName: taskData.name
-    });
-
-    if (!db) {
-        throw new Error('addTask: db parameter is undefined');
-    }
-    if (!userId) {
-        throw new Error('addTask: userId parameter is undefined');
-    }
-
     const tasksCol = collection(db, 'users', userId, 'tasks');
-    console.log('[DEBUG] tasksCol created:', tasksCol ? 'DEFINED' : 'UNDEFINED');
 
     const newTaskData = {
         ...taskData,
@@ -64,9 +50,7 @@ export async function addTask(db: Firestore, userId: string, taskData: Omit<Task
         createdAt: new Date().toISOString(),
     };
 
-    console.log('[DEBUG] About to call addDoc');
     const docRef = await addDoc(tasksCol, newTaskData);
-    console.log('[DEBUG] addDoc successful, docRef.id:', docRef.id);
     return { id: docRef.id, ...newTaskData };
 }
 
@@ -80,6 +64,7 @@ export function updateTask(db: Firestore, userId: string, taskId: string, update
           requestResourceData: updates,
         });
         errorEmitter.emit('permission-error', permissionError);
+        throw permissionError; // Re-throw to be caught by the caller
       });
 }
 
@@ -92,6 +77,7 @@ export function deleteTask(db: Firestore, userId: string, taskId: string): Promi
           operation: 'delete',
         });
         errorEmitter.emit('permission-error', permissionError);
+        throw permissionError; // Re-throw to be caught by the caller
       });
 }
 
@@ -164,6 +150,45 @@ export function saveMomentumScore(db: Firestore, userId: string, scoreData: Omit
       });
 }
 
+
+export async function calculateAndSaveMomentumScore(db: Firestore, userId: string) {
+    const allTasks = await getTasks(db, userId);
+    const todayEnergy = await getTodayEnergy(db, userId);
+
+    if (!todayEnergy) return;
+
+    const completedToday = allTasks.filter(task => task.completed && task.completedAt && isSameDay(parseISO(task.completedAt), new Date()));
+    if(completedToday.length === 0) return;
+
+    const latestMomentum = await getLatestMomentum(db, userId);
+    let streak = 1;
+    let streakBonus = 0;
+
+    if (latestMomentum) {
+        const lastScoreDate = parseISO(latestMomentum.date);
+        const yesterday = subDays(new Date(), 1);
+        if (isSameDay(lastScoreDate, yesterday)) {
+            streak = (latestMomentum.streak || 1) + 1;
+        }
+    }
+    streakBonus = streak > 1 ? streak * 10 : 0;
+
+    const scoreInput = {
+        energyLevel: todayEnergy.level,
+        completedTasks: completedToday.map(t => ({ taskId: t.id, taskName: t.name, energyLevel: t.energyLevel })),
+        streakBonus,
+    };
+
+    const aiResult = await calculateDailyMomentumScoreFlow(scoreInput);
+
+    await saveMomentumScore(db, userId, {
+        score: aiResult.dailyScore,
+        summary: aiResult.summary,
+        streak: streak
+    });
+}
+
+
 // Project Functions
 export async function getProjects(db: Firestore, userId: string): Promise<Project[]> {
     const projectsCol = collection(db, 'users', userId, 'projects');
@@ -172,27 +197,9 @@ export async function getProjects(db: Firestore, userId: string): Promise<Projec
 }
 
 export async function addProject(db: Firestore, userId: string, projectData: Omit<Project, 'id' | 'userId'>): Promise<Project> {
-    console.log('[DEBUG] addProject called', {
-        db: db ? 'DEFINED' : 'UNDEFINED',
-        userId: userId || 'UNDEFINED',
-        projectName: projectData.name
-    });
-
-    if (!db) {
-        throw new Error('addProject: db parameter is undefined');
-    }
-    if (!userId) {
-        throw new Error('addProject: userId parameter is undefined');
-    }
-
     const projectsCol = collection(db, 'users', userId, 'projects');
-    console.log('[DEBUG] projectsCol created:', projectsCol ? 'DEFINED' : 'UNDEFINED');
-
     const dataWithUserId = { ...projectData, userId };
-
-    console.log('[DEBUG] About to call addDoc for project');
     const docRef = await addDoc(projectsCol, dataWithUserId);
-    console.log('[DEBUG] addDoc successful for project, docRef.id:', docRef.id);
     return { id: docRef.id, ...dataWithUserId };
 }
 
@@ -243,19 +250,11 @@ export async function getRecurringTasks(db: Firestore, userId: string): Promise<
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RecurringTask));
 }
 
-export function addRecurringTask(db: Firestore, userId: string, taskData: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>): Promise<void> {
+export async function addRecurringTask(db: Firestore, userId: string, taskData: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>): Promise<RecurringTask> {
     const tasksCol = collection(db, 'users', userId, 'recurring-tasks');
     const newTaskData = { ...taskData, lastCompleted: null, userId };
-    return addDoc(tasksCol, newTaskData)
-    .then(() => {})
-    .catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-          path: tasksCol.path,
-          operation: 'create',
-          requestResourceData: newTaskData,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-      });
+    const docRef = await addDoc(tasksCol, newTaskData);
+    return { id: docRef.id, ...newTaskData };
 }
 
 export function updateRecurringTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<RecurringTask, 'id'>>): Promise<void> {
