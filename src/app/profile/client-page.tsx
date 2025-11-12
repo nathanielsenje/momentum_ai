@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -187,12 +188,12 @@ export function ProfileClientPage() {
 
   if (userLoading || dataLoading || !user) {
     return (
-        <div className="grid gap-6 md:grid-cols-3">
-            <div className="md:col-span-1 space-y-6">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="lg:col-span-1 space-y-6">
                 <Skeleton className="h-64 w-full" />
                 <Skeleton className="h-48 w-full" />
             </div>
-            <div className="md:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-6">
                 <Skeleton className="h-[28rem] w-full" />
                  <div className="grid gap-6 lg:grid-cols-2">
                     <Skeleton className="h-64 w-full" />
@@ -204,8 +205,8 @@ export function ProfileClientPage() {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-1 space-y-6">
+    <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-6">
              <Card>
                 <CardHeader>
                     <div className="flex items-center gap-4">
@@ -242,25 +243,8 @@ export function ProfileClientPage() {
                     </Form>
                 </CardContent>
             </Card>
-            
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <TrendingUp className="text-primary" />
-                        Productivity Stats
-                    </CardTitle>
-                </CardHeader>
-                 <CardContent className="grid grid-cols-1 gap-4">
-                    <StatCard icon={CheckCircle} title="Total Tasks Completed" value={stats.totalCompleted} />
-                    <StatCard icon={Calendar} title="Most Productive Day" value={stats.productiveDay} />
-                    <StatCard icon={Zap} title="Energy Sweet Spot" value={stats.energySweetSpot} />
-                    <StatCard icon={Tag} title="Top Category" value={stats.topCategory} />
-                </CardContent>
-            </Card>
-        </div>
 
-        <div className="md:col-span-2 space-y-6">
-           <Tabs defaultValue="upcoming" className="w-full">
+            <Tabs defaultValue="upcoming" className="w-full">
               <Card>
                 <CardHeader>
                   <CardTitle>Activity Overview</CardTitle>
@@ -317,8 +301,24 @@ export function ProfileClientPage() {
                 </CardContent>
               </Card>
             </Tabs>
+        </div>
 
-            <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
+           <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="text-primary" />
+                        Productivity Stats
+                    </CardTitle>
+                </CardHeader>
+                 <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <StatCard icon={CheckCircle} title="Total Tasks Completed" value={stats.totalCompleted} />
+                    <StatCard icon={Calendar} title="Most Productive Day" value={stats.productiveDay} />
+                    <StatCard icon={Zap} title="Energy Sweet Spot" value={stats.energySweetSpot} />
+                    <StatCard icon={Tag} title="Top Category" value={stats.topCategory} />
+                </CardContent>
+            </Card>
+
               <Card>
                   <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -380,8 +380,9 @@ export function ProfileClientPage() {
                       </ChartContainer>
                   </CardContent>
               </Card>
-          </div>
         </div>
     </div>
   );
 }
+
+    
