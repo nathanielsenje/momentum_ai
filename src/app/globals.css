@@ -78,33 +78,71 @@
   }
   body {
     @apply bg-background text-foreground;
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
   }
 }
 
-@keyframes gradient-animation {
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.blob-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  z-index: -1;
+  filter: blur(40px) contrast(30);
+}
+
+.blob-animation .blob {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.blob-animation .blob:nth-child(1) {
+  width: 250px;
+  height: 250px;
+  background-color: hsl(var(--primary) / 0.5);
+  animation: move 15s infinite;
+}
+
+.blob-animation .blob:nth-child(2) {
+  width: 200px;
+  height: 200px;
+  background-color: hsl(var(--sidebar-background) / 0.7);
+  animation: move 20s infinite alternate;
+}
+
+.blob-animation .blob:nth-child(3) {
+  width: 150px;
+  height: 150px;
+  background-color: hsl(var(--accent) / 0.6);
+  animation: move 12s infinite;
+}
+
+@keyframes move {
   0% {
-    background-position: 0% 50%;
+    transform: translate(-100px, -50px) scale(1);
+  }
+  25% {
+    transform: translate(300px, 150px) scale(1.1);
   }
   50% {
-    background-position: 100% 50%;
+    transform: translate(500px, -100px) scale(0.9);
+  }
+  75% {
+    transform: translate(100px, 300px) scale(1.2);
   }
   100% {
-    background-position: 0% 50%;
+    transform: translate(-100px, -50px) scale(1);
   }
-}
-
-.bg-gradient-animation {
-    background: linear-gradient(
-      -45deg,
-      hsl(var(--background)),
-      hsl(var(--sidebar-background)),
-      hsl(var(--primary)),
-      hsl(var(--accent))
-    );
-    background-size: 400% 400%;
-    animation: gradient-animation 15s ease infinite;
 }
 
 @keyframes pulse {
