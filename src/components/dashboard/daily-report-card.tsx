@@ -36,6 +36,7 @@ import {
 import { generateReportAction } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Separator } from '../ui/separator';
+import { cn } from '@/lib/utils';
 
 export function DailyReportCard() {
   const { user } = useUser();
@@ -227,6 +228,7 @@ export function DailyReportCard() {
                             variant="outline"
                             onClick={() => handleTimeTracking('start')}
                             disabled={isPending || !!report?.startTime}
+                            className="w-24 justify-start"
                             >
                             <Play className="mr-2 h-4 w-4" /> Start
                             </Button>
@@ -245,6 +247,7 @@ export function DailyReportCard() {
                                 variant="outline"
                                 onClick={() => handleTimeTracking('end')}
                                 disabled={isPending || !report?.startTime || !!report?.endTime}
+                                className="w-24 justify-start"
                             >
                                 <Square className="mr-2 h-4 w-4" /> End
                             </Button>
