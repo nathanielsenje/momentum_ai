@@ -313,19 +313,28 @@ export function DailyReportCard() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-primary/10">
-          <Button
-            size="sm"
-            onClick={handleGenerateReport}
-            disabled={isGenerating || !report}
-            className="flex-grow sm:flex-grow-0"
-          >
-            {isGenerating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <FileText className="mr-2 h-4 w-4" />
-            )}
-            {isGenerating ? 'Generating...' : 'Generate Report'}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm"
+                  onClick={handleGenerateReport}
+                  disabled={isGenerating || !report}
+                  className="flex-grow sm:flex-grow-0"
+                >
+                  {isGenerating ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileText className="mr-2 h-4 w-4" />
+                  )}
+                  {isGenerating ? 'Generating...' : 'Generate Report'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Use AI to generate a work summary for the day.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <Button
             size="sm"
             variant="secondary"
