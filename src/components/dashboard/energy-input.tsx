@@ -12,6 +12,7 @@ import { useFirestore } from '@/firebase';
 import { setTodayEnergy } from '@/lib/data-firestore';
 import { onClientWrite } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 const energyLevels: { level: EnergyLevel; icon: React.ElementType; description: string }[] = [
   { level: 'Low', icon: ZapOff, description: 'Gentle tasks' },
@@ -21,26 +22,19 @@ const energyLevels: { level: EnergyLevel; icon: React.ElementType; description: 
 
 interface EnergyInputProps {
     todayEnergy: EnergyLog | undefined;
-    onEnergyChange: (newEnergy: EnergyLog) => void;
     userId: string;
 }
 
-export function EnergyInput({ todayEnergy, onEnergyChange, userId }: EnergyInputProps) {
+export function EnergyInput({ todayEnergy, userId }: EnergyInputProps) {
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = React.useState(false);
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { todayEnergy: globalTodayEnergy, loading: dataLoading } = useDashboardData();
 
   const handleSetEnergy = (level: EnergyLevel) => {
     if (!firestore) return;
 
-    const newEnergyLog = {
-        date: new Date().toISOString(), // This will be overwritten by server but useful for optimistic update
-        level: level,
-        userId: userId,
-    };
-    // Optimistic update
-    onEnergyChange(newEnergyLog);
     setOpen(false);
 
     startTransition(async () => {
@@ -53,13 +47,11 @@ export function EnergyInput({ todayEnergy, onEnergyChange, userId }: EnergyInput
             title: 'Uh oh! Something went wrong.',
             description: 'Could not save your energy level.',
         });
-        // Revert optimistic update if necessary
-        onEnergyChange(todayEnergy!);
       }
     });
   };
   
-  if (!todayEnergy) {
+  if (!globalTodayEnergy && !dataLoading) {
      return (
         <div className="p-4 rounded-lg bg-secondary/30 h-full flex flex-col justify-center">
             <h3 className="font-semibold text-foreground mb-2">How are you feeling?</h3>
@@ -84,7 +76,8 @@ export function EnergyInput({ todayEnergy, onEnergyChange, userId }: EnergyInput
     );
   }
 
-  const currentLevel = energyLevels.find(e => e.level === todayEnergy.level);
+  const currentLevelData = globalTodayEnergy ? energyLevels.find(e => e.level === globalTodayEnergy.level) : null;
+  const currentLevel = currentLevelData || energyLevels[1];
 
   return (
     <div className="p-4 rounded-lg bg-secondary/30 h-full flex flex-col justify-center">
@@ -92,10 +85,10 @@ export function EnergyInput({ todayEnergy, onEnergyChange, userId }: EnergyInput
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("flex items-center gap-4 p-3 rounded-lg bg-background w-full justify-start h-auto", isPending && "animate-pulse")}>
-                    {currentLevel?.icon && <currentLevel.icon className="size-8 text-primary" />}
+                    {currentLevel.icon && <currentLevel.icon className="size-8 text-primary" />}
                     <div className='text-left'>
-                        <p className="font-semibold text-lg">{currentLevel?.level}</p>
-                        <p className="text-sm text-muted-foreground">{currentLevel?.description}</p>
+                        <p className="font-semibold text-lg">{currentLevel.level}</p>
+                        <p className="text-sm text-muted-foreground">{currentLevel.description}</p>
                     </div>
                     <ChevronDown className="ml-auto size-4 text-muted-foreground" />
                 </Button>

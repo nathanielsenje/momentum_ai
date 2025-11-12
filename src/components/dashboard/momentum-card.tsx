@@ -18,7 +18,7 @@ export function MomentumCard() {
     tasks,
     projects,
     todayEnergy: initialTodayEnergy,
-    latestMomentum: initialLatestMomentum
+    latestMomentum: initialLatestMomentum,
   } = useDashboardData();
   const userId = user!.uid;
 
@@ -29,10 +29,6 @@ export function MomentumCard() {
     routineSuggestion: undefined,
   });
   const [, startTransition] = useTransition();
-
-  const handleEnergyChange = (newEnergy: EnergyLog) => {
-    setTodayEnergy(newEnergy);
-  };
 
   React.useEffect(() => {
     setLatestMomentum(initialLatestMomentum);
@@ -91,7 +87,7 @@ export function MomentumCard() {
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1">Day Streak</p>
                 </div>
             </div>
-            <EnergyInput todayEnergy={todayEnergy} onEnergyChange={handleEnergyChange} userId={userId} />
+            <EnergyInput todayEnergy={todayEnergy} userId={userId} />
         </div>
 
         {suggestions.routineSuggestion && (
