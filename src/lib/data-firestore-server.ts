@@ -179,16 +179,6 @@ export async function getTodaysReport(db: Firestore, userId: string): Promise<Da
     return updatedReport;
 }
 
-export async function updateTodaysReport(db: Firestore, userId: string, updates: Partial<DailyReport>, date?: string): Promise<DailyReport> {
-    const reportDate = date || getToday();
-    const reportRef = db.collection('users').doc(userId).collection('reports').doc(reportDate);
-
-    const currentReport = await getTodaysReport(db, userId);
-    const newReportData = { ...currentReport, ...updates };
-    await reportRef.set(newReportData, { merge: true });
-    return newReportData;
-}
-
 // User Profile
 export async function updateUserProfile(db: Firestore, userId: string, updates: { displayName: string }): Promise<void> {
   const userRef = db.collection('users').doc(userId);

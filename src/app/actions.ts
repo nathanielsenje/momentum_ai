@@ -1,10 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import {
-  updateTodaysReport as updateTodaysReportServer,
-  updateUserProfile,
-} from '@/lib/data-firestore-server';
+import { updateUserProfile } from '@/lib/data-firestore-server';
 import type { DailyReport, ScoreAndSuggestTasksInput, Task } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { generateDailyWorkSummary as generateDailyWorkSummaryFlow } from '@/ai/flows/generate-daily-work-summary';
@@ -46,11 +43,9 @@ interface GenerateReportActionInput {
   tasks: Task[];
 }
 
-export async function generateReportAction({ userId, report, tasks }: GenerateReportActionInput) {
-  const db = getDb();
-
-  const completedTasks = tasks.filter(t => t.completed).map(t => t.name);
-  const inProgressTasks = tasks.filter(t => !t.completed).map(t => t.name);
+export async function generateReportAction({ userId, report, tasks }: GenerateReportActionInput): Promise<string | null> {
+  const completedTasks = (tasks || []).filter(t => t.completed).map(t => t.name);
+  const inProgressTasks = (tasks || []).filter(t => !t.completed).map(t => t.name);
 
   const result = await generateDailyWorkSummaryFlow({
     startTime: report?.startTime ? format(parseISO(report.startTime), 'p') : null,
@@ -60,12 +55,12 @@ export async function generateReportAction({ userId, report, tasks }: GenerateRe
   });
 
   if (result.report) {
-    await updateTodaysReportServer(db, userId, { generatedReport: result.report }, report.date);
+    // Return the generated report text to the client to save.
+    revalidatePath('/reports');
+    return result.report;
   }
 
-  revalidatePath('/reports');
-
-  return result.report;
+  return null;
 }
 
 

@@ -16,7 +16,7 @@ import { getTasks, updateTodaysReport } from '@/lib/data-firestore';
 export function DailyReportCard() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { todaysReport: initialReport, loading: dataLoading } = useDashboardData();
+  const { todaysReport: initialReport, loading: dataLoading, tasks } = useDashboardData();
   const userId = user!.uid;
 
   const [report, setReport] = React.useState<DailyReport | null>(initialReport);
@@ -77,14 +77,18 @@ export function DailyReportCard() {
 
     startGeneratingTransition(async () => {
       try {
-        const allTasks = await getTasks(firestore, userId);
         const reportDate = format(parseISO(report.date), 'yyyy-MM-dd');
-        const relevantTasks = allTasks.filter(t => t.createdAt && format(parseISO(t.createdAt), 'yyyy-MM-dd') === reportDate);
+        const relevantTasks = tasks.filter(t => t.createdAt && format(parseISO(t.createdAt), 'yyyy-MM-dd') === reportDate);
         
         const generatedText = await generateReportAction({ userId, report, tasks: relevantTasks });
 
-        setReport(prev => prev ? { ...prev, generatedReport: generatedText } : null);
-        toast({ title: "AI summary generated!" });
+        if (generatedText) {
+          await updateTodaysReport(firestore, userId, { generatedReport: generatedText });
+          setReport(prev => prev ? { ...prev, generatedReport: generatedText } : null);
+          toast({ title: "AI summary generated!" });
+        } else {
+          throw new Error("Generated report text was empty.");
+        }
       } catch (error) {
         console.error("Failed to generate report:", error);
         toast({ variant: 'destructive', title: 'Could not generate AI summary.' });

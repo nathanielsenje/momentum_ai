@@ -13,7 +13,7 @@ import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { getReports, getTasks } from '@/lib/data-firestore';
+import { getReports, getTasks, updateTodaysReport } from '@/lib/data-firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { generateReportAction } from '../actions';
@@ -99,9 +99,13 @@ export function ReportsClientPage() {
         
         const generatedText = await generateReportAction({ userId: user.uid, report: selectedReport, tasks: relevantTasks });
         
-        setSelectedReport(prev => prev ? { ...prev, generatedReport: generatedText } : null);
-        await fetchReports(); // Refetch all reports to get the updated one
-        toast({ title: "AI summary generated!" });
+        if (generatedText) {
+          await updateTodaysReport(firestore, user.uid, { generatedReport: generatedText });
+          await fetchReports(); // Refetch all reports to get the updated one
+          toast({ title: "AI summary generated!" });
+        } else {
+            throw new Error("Generated report text was empty.");
+        }
       } catch (error) {
         console.error("Failed to generate report:", error);
         toast({ variant: 'destructive', title: 'Could not generate AI summary.' });
