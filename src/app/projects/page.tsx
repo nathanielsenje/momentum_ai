@@ -1,4 +1,4 @@
-'use client';
+
 import { ProjectClientPage } from "./client-page";
 import { Skeleton } from "@/components/ui/skeleton";
 import React from "react";

@@ -1,4 +1,4 @@
-'use client';
+
 import { ReportsClientPage } from "./client-page";
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
