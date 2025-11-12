@@ -8,7 +8,7 @@ import { generateDailyWorkSummary as generateDailyWorkSummaryFlow } from '@/ai/f
 import { visualizeFlowAlignment as visualizeFlowAlignmentFlow } from '@/ai/flows/visualize-flow-alignment';
 import { getDb } from '@/firebase/server-init';
 import { format, parseISO } from 'date-fns';
-import { doc, updateDoc, getDocs, collection } from 'firebase-admin/firestore';
+import { doc, updateDoc } from 'firebase-admin/firestore';
 
 // This function is called from a client-side data mutation, so it needs to revalidate paths
 // and perform any server-side logic after a task is completed.
@@ -73,10 +73,10 @@ export async function getSuggestedTasks(input: ScoreAndSuggestTasksInput) {
 
 export async function getFlowAlignmentReport(userId: string) {
   const db = getDb();
-  const tasksSnapshot = await getDocs(collection(db, `users/${userId}/tasks`));
+  const tasksSnapshot = await db.collection(`users/${userId}/tasks`).get();
   const tasks = tasksSnapshot.docs.map(doc => doc.data() as Task);
 
-  const energyLogSnapshot = await getDocs(collection(db, `users/${userId}/energy-log`));
+  const energyLogSnapshot = await db.collection(`users/${userId}/energy-log`).get();
   const energyLog = energyLogSnapshot.docs.map(doc => doc.data());
 
   const result = await visualizeFlowAlignmentFlow({
