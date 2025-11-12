@@ -17,32 +17,36 @@ export function DashboardClientPage() {
 
   if (userLoading || dataLoading || !user) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 flex flex-col gap-6">
           <Skeleton className="h-64" />
           <Skeleton className="h-96" />
         </div>
-        <Skeleton className="h-48" />
-        <Skeleton className="h-48" />
-        <Skeleton className="h-64" />
+        <div className="lg:col-span-1 flex flex-col gap-6">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-48" />
+          <Skeleton className="h-64" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Pomodoro />
-        <TaskList />
-      </div>
-      
-      <ProjectOverview />
-      
-      <DailyReportCard />
-      
-      <React.Suspense fallback={<Skeleton className="h-64" />}>
-        <MomentumCard />
-      </React.Suspense>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Main Column */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+            <React.Suspense fallback={<Skeleton className="h-64" />}>
+                <MomentumCard />
+            </React.Suspense>
+            <TaskList />
+        </div>
+
+        {/* Right Sidebar Column */}
+        <div className="lg:col-span-1 flex flex-col gap-6">
+            <Pomodoro />
+            <ProjectOverview />
+            <DailyReportCard />
+        </div>
     </div>
   );
 }
