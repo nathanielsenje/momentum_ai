@@ -13,7 +13,6 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
 
 interface ReportData {
-  visualizationUri: string;
   report: string;
 }
 
@@ -32,7 +31,7 @@ export function FlowVisualizerCard() {
       setReportData(null);
       try {
         const result = await visualizeFlowAlignment({ tasks, energyLog });
-        if (result.visualizationUri && result.report) {
+        if (result.report) {
             setReportData(result);
         } else {
             throw new Error("The AI didn't return the expected data.");
@@ -72,7 +71,6 @@ export function FlowVisualizerCard() {
 
         {isGenerating && (
           <div className="space-y-4">
-            <Skeleton className="h-48 w-full" />
             <div className="space-y-2">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-4 w-full" />
@@ -91,14 +89,6 @@ export function FlowVisualizerCard() {
 
         {reportData && (
           <div className="space-y-4">
-            <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
-              <Image
-                src={reportData.visualizationUri}
-                alt="Flow Alignment Chart"
-                fill
-                className="object-contain"
-              />
-            </div>
             <div>
                 <h4 className="font-semibold mb-2">AI Insights:</h4>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{reportData.report}</p>
