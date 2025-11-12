@@ -5,7 +5,6 @@ import { revalidatePath } from 'next/cache';
 import type { DailyReport, ScoreAndSuggestTasksInput, Task } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { generateDailyWorkSummary as generateDailyWorkSummaryFlow } from '@/ai/flows/generate-daily-work-summary';
-import { visualizeFlowAlignment as visualizeFlowAlignmentFlow } from '@/ai/flows/visualize-flow-alignment';
 import { getDb } from '@/firebase/server-init';
 import { format, parseISO } from 'date-fns';
 import { doc, updateDoc } from 'firebase-admin/firestore';
@@ -16,7 +15,6 @@ export async function onTaskCompleted(userId: string) {
     // Momentum score is now calculated on the client side.
     // This server action is now only responsible for revalidating paths.
     revalidatePath('/');
-    revalidatePath('/analytics');
     revalidatePath('/projects');
     revalidatePath('/reports');
     revalidatePath('/weekly-planner');
@@ -29,7 +27,6 @@ export async function onClientWrite() {
     revalidatePath('/reports');
     revalidatePath('/weekly-planner');
     revalidatePath('/profile');
-    revalidatePath('/analytics');
 }
 
 export async function updateUserProfileAction(userId: string, updates: { displayName: string }) {

@@ -164,18 +164,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/analytics'}
-                  tooltip="Analytics"
-                >
-                  <Link href="/analytics">
-                    <Activity />
-                    <span>Analytics</span>
-                  </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="mt-auto">
