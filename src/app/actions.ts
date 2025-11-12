@@ -1,14 +1,14 @@
+
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { updateUserProfile } from '@/lib/data-firestore-server';
 import type { DailyReport, ScoreAndSuggestTasksInput, Task } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { generateDailyWorkSummary as generateDailyWorkSummaryFlow } from '@/ai/flows/generate-daily-work-summary';
 import { visualizeFlowAlignment as visualizeFlowAlignmentFlow } from '@/ai/flows/visualize-flow-alignment';
 import { getDb } from '@/firebase/server-init';
-import { getTasks as getTasksServer, getEnergyLog as getEnergyLogServer } from '@/lib/data-firestore-server';
 import { format, parseISO } from 'date-fns';
+import { doc, updateDoc, getDocs, collection } from 'firebase-admin/firestore';
 
 // This function is called from a client-side data mutation, so it needs to revalidate paths
 // and perform any server-side logic after a task is completed.
@@ -34,7 +34,8 @@ export async function onClientWrite() {
 
 export async function updateUserProfileAction(userId: string, updates: { displayName: string }) {
   const db = getDb();
-  await updateUserProfile(db, userId, updates);
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, updates);
   revalidatePath('/profile');
   revalidatePath('/'); // To update name in sidebar etc.
 }
@@ -72,8 +73,11 @@ export async function getSuggestedTasks(input: ScoreAndSuggestTasksInput) {
 
 export async function getFlowAlignmentReport(userId: string) {
   const db = getDb();
-  const tasks = await getTasksServer(db, userId);
-  const energyLog = await getEnergyLogServer(db, userId);
+  const tasksSnapshot = await getDocs(collection(db, `users/${userId}/tasks`));
+  const tasks = tasksSnapshot.docs.map(doc => doc.data() as Task);
+
+  const energyLogSnapshot = await getDocs(collection(db, `users/${userId}/energy-log`));
+  const energyLog = energyLogSnapshot.docs.map(doc => doc.data());
 
   const result = await visualizeFlowAlignmentFlow({
     taskData: JSON.stringify(tasks),
