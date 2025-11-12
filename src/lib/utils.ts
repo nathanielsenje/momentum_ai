@@ -9,16 +9,17 @@ export function cn(...inputs: ClassValue[]) {
 export const getProjectProgress = (projectId: string, tasks: Task[]) => {
   const projectTasks = tasks.filter(t => t.projectId === projectId);
   const totalTasks = projectTasks.length;
+  const completedTasks = projectTasks.filter(t => t.completed).length;
+
   if (totalTasks === 0) {
-    return { percentage: 0, text: "No tasks", data: [], totalTasks: 0, completedTasks: 0 };
+    return { percentage: 0, text: "0/0", data: [], totalTasks: 0, completedTasks: 0 };
   }
   
-  const completedTasks = projectTasks.filter(t => t.completed).length;
   const percentage = Math.round((completedTasks / totalTasks) * 100);
   
   return {
     percentage,
-    text: `${completedTasks} / ${totalTasks}`,
+    text: `${completedTasks}/${totalTasks}`,
     data: [{ name: 'Progress', value: percentage, fill: "hsl(var(--primary))" }],
     totalTasks,
     completedTasks

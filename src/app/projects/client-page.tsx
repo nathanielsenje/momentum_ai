@@ -167,7 +167,7 @@ export function ProjectClientPage() {
                   <CardContent className="flex items-center justify-between">
                       <div>
                           <p className="text-sm text-muted-foreground">
-                              {progress.text} done
+                              {progress.completedTasks} of {progress.totalTasks} tasks done
                           </p>
                       </div>
                        <ChartContainer
@@ -206,7 +206,7 @@ export function ProjectClientPage() {
                                   dominantBaseline="middle"
                                   className="fill-foreground text-sm font-medium"
                               >
-                                  {progress.percentage}%
+                                  {progress.text}
                               </text>
                           </RadialBarChart>
                       </ChartContainer>
