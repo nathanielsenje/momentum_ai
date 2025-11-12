@@ -7,11 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { generateReportAction, onClientWrite } from '@/app/actions';
-import type { DailyReport } from '@/lib/types';
+import type { DailyReport, Task } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
-import { updateTodaysReport } from '@/lib/data-firestore';
+import { getTasks, updateTodaysReport } from '@/lib/data-firestore';
 
 export function DailyReportCard() {
   const { user } = useUser();
@@ -73,16 +73,21 @@ export function DailyReportCard() {
   };
 
   const handleGenerateReport = () => {
-    if (!report) return;
+    if (!report || !firestore) return;
 
     startGeneratingTransition(async () => {
       try {
-        const generatedText = await generateReportAction(userId, report.date);
+        const allTasks = await getTasks(firestore, userId);
+        const reportDate = format(parseISO(report.date), 'yyyy-MM-dd');
+        const relevantTasks = allTasks.filter(t => t.createdAt && format(parseISO(t.createdAt), 'yyyy-MM-dd') === reportDate);
+        
+        const generatedText = await generateReportAction({ userId, report, tasks: relevantTasks });
+
         setReport(prev => prev ? { ...prev, generatedReport: generatedText } : null);
         toast({ title: "AI summary generated!" });
       } catch (error) {
         console.error("Failed to generate report:", error);
-        toast({ variant: 'destructive', title: 'Failed to generate AI summary.' });
+        toast({ variant: 'destructive', title: 'Could not generate AI summary.' });
       }
     });
   };

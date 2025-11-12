@@ -8,12 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clipboard, Download, FileText, Loader2 } from 'lucide-react';
-import type { DailyReport } from '@/lib/types';
+import type { DailyReport, Task } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { getReports } from '@/lib/data-firestore';
+import { getReports, getTasks } from '@/lib/data-firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { generateReportAction } from '../actions';
@@ -89,17 +89,22 @@ export function ReportsClientPage() {
   };
 
   const handleGenerateReport = () => {
-    if (!selectedReport || !user) return;
+    if (!selectedReport || !user || !firestore) return;
 
     startGeneratingTransition(async () => {
       try {
-        const generatedText = await generateReportAction(user.uid, selectedReport.date);
+        const allTasks = await getTasks(firestore, user.uid);
+        const reportDate = format(parseISO(selectedReport.date), 'yyyy-MM-dd');
+        const relevantTasks = allTasks.filter(t => t.createdAt && format(parseISO(t.createdAt), 'yyyy-MM-dd') === reportDate);
+        
+        const generatedText = await generateReportAction({ userId: user.uid, report: selectedReport, tasks: relevantTasks });
+        
         setSelectedReport(prev => prev ? { ...prev, generatedReport: generatedText } : null);
         await fetchReports(); // Refetch all reports to get the updated one
         toast({ title: "AI summary generated!" });
       } catch (error) {
         console.error("Failed to generate report:", error);
-        toast({ variant: 'destructive', title: 'Failed to generate AI summary.' });
+        toast({ variant: 'destructive', title: 'Could not generate AI summary.' });
       }
     });
   };

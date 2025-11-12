@@ -2,14 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 import {
-  getTasks,
-  updateTodaysReport,
+  updateTodaysReport as updateTodaysReportServer,
   updateUserProfile,
-  getProjects as getProjectsServer,
 } from '@/lib/data-firestore-server';
-import type { DailyReport, ScoreAndSuggestTasksInput } from '@/lib/types';
+import type { DailyReport, ScoreAndSuggestTasksInput, Task } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
-import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
 import { generateDailyWorkSummary as generateDailyWorkSummaryFlow } from '@/ai/flows/generate-daily-work-summary';
 import { getDb } from '@/firebase/server-init';
 import { format, parseISO } from 'date-fns';
@@ -43,30 +40,27 @@ export async function updateUserProfileAction(userId: string, updates: { display
   revalidatePath('/'); // To update name in sidebar etc.
 }
 
+interface GenerateReportActionInput {
+  userId: string;
+  report: DailyReport;
+  tasks: Task[];
+}
 
-export async function generateReportAction(userId: string, reportDate: string) {
+export async function generateReportAction({ userId, report, tasks }: GenerateReportActionInput) {
   const db = getDb();
-  const allTasks = await getTasks(db, userId);
 
-  // Note: This logic assumes tasks for the report are those created on that day.
-  // This could be adjusted based on more complex business logic if needed.
-  const relevantTasks = (allTasks || []).filter(t => t.createdAt && format(parseISO(t.createdAt), 'yyyy-MM-dd') === reportDate);
-  const completedTasks = relevantTasks.filter(t => t.completed).map(t => t.name);
-  const inProgressTasks = relevantTasks.filter(t => !t.completed).map(t => t.name);
-
-  const reportRef = db.collection('users').doc(userId).collection('reports').doc(reportDate);
-  const reportSnap = await reportRef.get();
-  const reportData = reportSnap.data() as DailyReport;
+  const completedTasks = tasks.filter(t => t.completed).map(t => t.name);
+  const inProgressTasks = tasks.filter(t => !t.completed).map(t => t.name);
 
   const result = await generateDailyWorkSummaryFlow({
-    startTime: reportData?.startTime ? format(parseISO(reportData.startTime), 'p') : null,
-    endTime: reportData?.endTime ? format(parseISO(reportData.endTime), 'p') : null,
+    startTime: report?.startTime ? format(parseISO(report.startTime), 'p') : null,
+    endTime: report?.endTime ? format(parseISO(report.endTime), 'p') : null,
     completedTasks,
     inProgressTasks,
   });
 
   if (result.report) {
-    await updateTodaysReport(db, userId, { generatedReport: result.report }, reportDate);
+    await updateTodaysReportServer(db, userId, { generatedReport: result.report }, report.date);
   }
 
   revalidatePath('/reports');
