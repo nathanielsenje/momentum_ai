@@ -9,7 +9,6 @@ import { DailyReportCard } from '@/components/dashboard/daily-report-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
-import { AiInsightsCard } from '@/components/dashboard/ai-insights-card';
 
 export function DashboardClientPage() {
   const { user, loading: userLoading } = useUser();
@@ -46,9 +45,8 @@ export function DashboardClientPage() {
 
       {/* Bottom Row: Overviews */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2 flex flex-col gap-6">
+        <div className="lg:col-span-2">
             <ProjectOverview />
-            <AiInsightsCard />
         </div>
         <div className="lg:col-span-1">
             <DailyReportCard />
