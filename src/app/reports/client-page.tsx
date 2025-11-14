@@ -130,7 +130,7 @@ export function ReportsClientPage() {
                 <Carousel opts={{ align: "start", dragFree: true }}>
                     <CarouselContent className="-ml-2">
                         {reports.map((report, index) => (
-                            <CarouselItem key={index} className="basis-auto pl-2">
+                            <CarouselItem key={index} className="basis-auto pl-2 flex flex-col">
                                 <DateCard
                                     report={report}
                                     isSelected={selectedReport?.date === report.date}

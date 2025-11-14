@@ -22,7 +22,7 @@ export function DateCard({ report, isSelected, onSelect }: DateCardProps) {
     <button
       onClick={onSelect}
       className={cn(
-        "flex w-40 flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent",
+        "flex w-40 flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent h-full",
         isSelected && "bg-accent shadow-inner border-primary/50"
       )}
     >
@@ -39,6 +39,7 @@ export function DateCard({ report, isSelected, onSelect }: DateCardProps) {
           {format(parseISO(report.date), 'eeee')}
         </div>
       </div>
+      <div className="flex-grow" />
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <div className="flex items-center gap-1">
           <CheckCircle className="h-3 w-3" />
