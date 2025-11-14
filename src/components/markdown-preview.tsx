@@ -11,7 +11,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
     return <p className="text-sm text-muted-foreground">The generated report will appear here.</p>;
   }
 
-  const lines = content.split('\n');
+  const lines = content.split('\n').filter(line => line.trim() !== '');
   const elements: React.ReactNode[] = [];
   let currentList: string[] = [];
 
@@ -44,9 +44,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
         elements.push(renderList(currentList, `list-${i - 1}`));
         currentList = [];
       }
-      if (line.trim() !== '') {
-        elements.push(<p key={i} className="text-sm text-muted-foreground my-2">{line}</p>);
-      }
+      elements.push(<p key={i} className="text-sm text-muted-foreground my-2">{line}</p>);
     }
   });
 

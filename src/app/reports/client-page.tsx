@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clipboard, Download, FileText, Loader2 } from 'lucide-react';
-import type { DailyReport, Task } from '@/lib/types';
+import type { DailyReport } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
@@ -175,7 +175,7 @@ export function ReportsClientPage() {
             {selectedReport ? (
               <div className="space-y-4">
                  <ScrollArea className="h-[24rem] w-full rounded-md border bg-muted p-4">
-                     <MarkdownPreview content={selectedReport.generatedReport || "Click 'Generate AI Summary' to create a summary."}/>
+                     <MarkdownPreview content={selectedReport.generatedReport}/>
                  </ScrollArea>
                  <div className="flex gap-2">
                     <Button onClick={handleGenerateReport} disabled={isGenerating}>
