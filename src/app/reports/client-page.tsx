@@ -61,8 +61,8 @@ export function ReportsClientPage() {
   React.useEffect(() => {
     if (selectedReport) {
       setClientFormattedTimes({
-        startTime: selectedReport.startTime ? format(parseISO(selectedReport.startTime), 'h:mm a') : 'N/A',
-        endTime: selectedReport.endTime ? format(parseISO(selectedReport.endTime), 'h:mm a') : 'N/A',
+        startTime: selectedReport.startTime ? format(parseISO(selectedReport.startTime), 'p') : 'N/A',
+        endTime: selectedReport.endTime ? format(parseISO(selectedReport.endTime), 'p') : 'N/A',
       });
     }
   }, [selectedReport]);
