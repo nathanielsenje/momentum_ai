@@ -16,7 +16,7 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
-  title: 'Elvo',
+  title: 'Amore',
   description: 'Your personal dashboard for productivity and focus.',
 };
 

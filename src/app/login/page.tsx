@@ -19,6 +19,8 @@ import Link from 'next/link';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
+import { useAuth } from '@/firebase/provider';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -26,7 +28,8 @@ const formSchema = z.object({
 });
 
 export default function LoginPage() {
-  const { login, user, loading } = useUser();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -40,7 +43,7 @@ export default function LoginPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await login(values.email, values.password);
+      initiateEmailSignIn(auth, values.email, values.password);
       toast({ title: "Login Successful", description: "Welcome back!" });
     } catch (error: any) {
       console.error("Login error:", error);
@@ -53,17 +56,17 @@ export default function LoginPage() {
   };
 
   React.useEffect(() => {
-    if (!loading && user) {
+    if (!isUserLoading && user) {
       router.push('/');
     }
-  }, [user, loading, router]);
+  }, [user, isUserLoading, router]);
 
-  if (loading || user) {
+  if (isUserLoading || user) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <div className="w-full max-w-md p-8 space-y-8 bg-card text-card-foreground rounded-lg shadow-lg">
         <div className="text-center">
           <Heart className="mx-auto w-12 h-12 text-primary" />

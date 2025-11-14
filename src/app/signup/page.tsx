@@ -19,8 +19,14 @@ import Link from 'next/link';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
+import { useAuth } from '@/firebase/provider';
+import { createUserProfile } from '@/lib/data-firestore';
+import { useFirestore } from '@/firebase';
+import { updateProfile } from 'firebase/auth';
 
 const formSchema = z.object({
+  displayName: z.string().min(2, { message: 'Display name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   confirmPassword: z.string(),
@@ -30,13 +36,16 @@ const formSchema = z.object({
 });
 
 export default function SignUpPage() {
-  const { signup, user, loading } = useUser();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      displayName: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -44,9 +53,20 @@ export default function SignUpPage() {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!auth || !firestore) return;
     try {
-      await signup(values.email, values.password);
+      const userCredential = await auth.createUserWithEmailAndPassword(values.email, values.password);
+      const firebaseUser = userCredential.user;
+
+      await updateProfile(firebaseUser, { displayName: values.displayName });
+      await createUserProfile(firestore, firebaseUser.uid, {
+          email: firebaseUser.email,
+          displayName: values.displayName,
+          photoURL: firebaseUser.photoURL,
+      });
+
       toast({ title: "Account Created", description: "Welcome to Amore!" });
+      router.push('/');
     } catch (error: any) { 
       console.error("Signup error:", error);
       toast({
@@ -58,17 +78,17 @@ export default function SignUpPage() {
   };
 
   React.useEffect(() => {
-    if (!loading && user) {
+    if (!isUserLoading && user) {
       router.push('/');
     }
-  }, [user, loading, router]);
+  }, [user, isUserLoading, router]);
 
-  if (loading || user) {
+  if (isUserLoading || user) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <div className="w-full max-w-md p-8 space-y-8 bg-card text-card-foreground rounded-lg shadow-lg">
         <div className="text-center">
           <Heart className="mx-auto w-12 h-12 text-primary" />
@@ -77,6 +97,19 @@ export default function SignUpPage() {
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="displayName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Display Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Your Name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="email"
