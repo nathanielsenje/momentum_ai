@@ -1,14 +1,14 @@
+
 'use client';
 
 import * as React from 'react';
 import { useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clipboard, Download, FileText, Loader2 } from 'lucide-react';
+import { Clipboard, Download, FileText, Loader2, Calendar, CheckCircle } from 'lucide-react';
 import type { DailyReport } from '@/lib/types';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isToday } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
 import { getReports, getTasks, updateTodaysReport } from '@/lib/data-firestore';
@@ -17,6 +17,7 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { generateReportAction } from '../actions';
 import { MarkdownPreview } from '@/components/markdown-preview';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 
 export function ReportsClientPage() {
@@ -41,7 +42,6 @@ export function ReportsClientPage() {
         if (!selectedReport && reportsArray.length > 0) {
           setSelectedReport(reportsArray[0]);
         } else if (selectedReport) {
-          // If a report was selected, find its updated version in the new data
           const updatedSelected = reportsArray.find(r => r.date === selectedReport.date);
           setSelectedReport(updatedSelected || reportsArray[0] || null);
         }
@@ -56,6 +56,7 @@ export function ReportsClientPage() {
 
   React.useEffect(() => {
     fetchReports();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, firestore]);
 
   React.useEffect(() => {
@@ -112,72 +113,96 @@ export function ReportsClientPage() {
   
   if (userLoading || dataLoading || isFetching || !user) {
     return (
-         <div className="grid gap-4 md:grid-cols-3">
-            <div className="md:col-span-1">
-                <Skeleton className="h-96 w-full" />
+         <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+                <Skeleton className="h-[calc(100vh-10rem)] w-full" />
             </div>
-            <div className="md:col-span-2">
-                <Skeleton className="h-96 w-full" />
+            <div className="lg:col-span-2">
+                <Skeleton className="h-[calc(100vh-10rem)] w-full" />
             </div>
         </div>
     )
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
-      <div className="md:col-span-1">
-        <Card>
+    <div className="grid gap-6 lg:grid-cols-3">
+      <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Reports History</CardTitle>
             <CardDescription>Select a day to view its report.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Completed</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reports.map(report => (
-                  <TableRow 
-                    key={report.date} 
-                    onClick={() => setSelectedReport(report)}
-                    className="cursor-pointer"
-                    data-selected={selectedReport?.date === report.date}
-                  >
-                    <TableCell>{format(parseISO(report.date), 'MMM d, yyyy')}</TableCell>
-                    <TableCell className="text-right">
-                       <Badge variant={report.completed / (report.goals || 1) >= 0.75 ? 'default' : 'secondary'}>
-                          {Math.round((report.completed / (report.goals || 1)) * 100)}%
-                        </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+            <ScrollArea className="h-[calc(100vh-15rem)]">
+              <div className="flex flex-col gap-2 pr-4">
+                {reports.map(report => {
+                    const completionRate = report.goals > 0 ? (report.completed / report.goals) * 100 : 0;
+                    const isSelected = selectedReport?.date === report.date;
 
-      <div className="md:col-span-2">
-        <Card>
+                    return (
+                        <button
+                            key={report.date}
+                            onClick={() => setSelectedReport(report)}
+                            className={cn(
+                                "flex flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent",
+                                isSelected && "bg-accent shadow-inner"
+                            )}
+                        >
+                            <div className="flex w-full flex-col gap-1">
+                                <div className="flex items-center">
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="h-4 w-4" />
+                                        <div className="font-semibold">{format(parseISO(report.date), 'MMM d, yyyy')}</div>
+                                    </div>
+                                    {isToday(parseISO(report.date)) && (
+                                        <div className="ml-auto text-xs">
+                                            <Badge>Today</Badge>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                    {format(parseISO(report.date), 'eeee')}
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                    <CheckCircle className="h-3 w-3"/>
+                                    {report.completed} / {report.goals} done
+                                </div>
+                            </div>
+                             <div className="w-full bg-secondary rounded-full h-1.5">
+                                <div className="bg-primary h-1.5 rounded-full" style={{ width: `${completionRate}%` }}></div>
+                            </div>
+                        </button>
+                    )
+                })}
+              </div>
+            </ScrollArea>
+          </CardContent>
+      </Card>
+
+      <div className="lg:col-span-2">
+        <Card className="h-full flex flex-col">
           <CardHeader>
-            <CardTitle>
-              {selectedReport ? `Report for ${format(parseISO(selectedReport.date), 'eeee, MMM d')}` : 'No Report Selected'}
-            </CardTitle>
-            <CardDescription>
-                {selectedReport ? `Started: ${clientFormattedTimes.startTime} | Ended: ${clientFormattedTimes.endTime}` : "Select a report to view details."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
             {selectedReport ? (
-              <div className="space-y-4">
-                 <ScrollArea className="h-[24rem] w-full rounded-md border bg-muted p-4">
+              <>
+                <CardTitle>
+                  {`Report for ${format(parseISO(selectedReport.date), 'eeee, MMMM d')}`}
+                </CardTitle>
+                <CardDescription>
+                    {`Started: ${clientFormattedTimes.startTime} | Ended: ${clientFormattedTimes.endTime}`}
+                </CardDescription>
+              </>
+            ) : (
+                <CardTitle>No Report Selected</CardTitle>
+            )}
+          </CardHeader>
+          <CardContent className="flex-grow flex flex-col gap-4">
+            {selectedReport ? (
+              <>
+                 <ScrollArea className="flex-grow h-[calc(100vh-25rem)] w-full rounded-md border bg-background/50 p-4">
                      <MarkdownPreview content={selectedReport.generatedReport}/>
                  </ScrollArea>
-                 <div className="flex gap-2">
+                 <div className="flex flex-wrap gap-2">
                     <Button onClick={handleGenerateReport} disabled={isGenerating}>
                         {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                         {isGenerating ? 'Generating...' : 'Generate AI Summary'}
@@ -185,10 +210,12 @@ export function ReportsClientPage() {
                     <Button variant="secondary" onClick={() => handleCopyToClipboard(selectedReport.generatedReport)}><Clipboard className="mr-2 h-4 w-4" />Copy</Button>
                     <Button variant="outline" onClick={() => handleExport(selectedReport)}><Download className="mr-2 h-4 w-4" />Export .txt</Button>
                  </div>
-              </div>
+              </>
             ) : (
-              <div className="text-center text-muted-foreground p-8">
-                Select a report from the history list to see its details.
+              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 bg-muted rounded-lg">
+                <FileText className="size-16 mb-4"/>
+                <h3 className="font-semibold text-lg text-foreground">Select a report</h3>
+                <p>Choose a day from the history list to see its details and generate an AI summary.</p>
               </div>
             )}
           </CardContent>
