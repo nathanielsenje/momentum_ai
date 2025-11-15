@@ -33,7 +33,7 @@ export function VisualReportCard({ report }: VisualReportCardProps) {
     ];
 
     return (
-        <Card className="h-full">
+        <Card className="h-full bg-secondary/30">
             <CardHeader>
                 <CardTitle>Daily Vitals</CardTitle>
                 <CardDescription>
@@ -44,7 +44,7 @@ export function VisualReportCard({ report }: VisualReportCardProps) {
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                          <p className="text-sm font-medium text-muted-foreground text-center mb-2">Work Hours</p>
-                        <div className="flex flex-col items-center gap-2 text-center p-4 rounded-lg bg-secondary/30">
+                        <div className="flex flex-col items-center gap-2 text-center p-4 rounded-lg bg-background/50">
                             <div>
                                 <p className="text-xs text-muted-foreground">Start</p>
                                 <p className="font-semibold">{report.startTime ? format(parseISO(report.startTime), 'p') : 'N/A'}</p>

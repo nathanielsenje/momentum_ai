@@ -147,36 +147,32 @@ export function ReportsClientPage() {
       </Card>
 
       {selectedReport ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            <div className="lg:col-span-2 h-full">
-                <Card className="h-full flex flex-col">
-                <CardHeader>
-                    <CardTitle>
-                        AI Generated Summary
-                    </CardTitle>
-                    <CardDescription>
-                        {`Report for ${format(parseISO(selectedReport.date), 'eeee, MMMM d')}`}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow flex flex-col gap-4">
-                        <ScrollArea className="flex-grow h-[calc(100vh-28rem)] w-full rounded-md border bg-background/50 p-4">
-                            <MarkdownPreview content={selectedReport.generatedReport}/>
-                        </ScrollArea>
-                        <div className="flex flex-wrap gap-2">
-                            <Button onClick={handleGenerateReport} disabled={isGenerating}>
-                                {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
-                                {isGenerating ? 'Generating...' : 'Generate AI Summary'}
-                            </Button>
-                            <Button variant="secondary" onClick={() => handleCopyToClipboard(selectedReport.generatedReport)}><Clipboard className="mr-2 h-4 w-4" />Copy</Button>
-                            <Button variant="outline" onClick={() => handleExport(selectedReport)}><Download className="mr-2 h-4 w-4" />Export .txt</Button>
-                        </div>
-                </CardContent>
-                </Card>
-            </div>
-            <div className="lg:col-span-1 h-full">
-                <VisualReportCard report={selectedReport} />
-            </div>
-        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>
+                    Report for {format(parseISO(selectedReport.date), 'eeee, MMMM d')}
+                </CardTitle>
+                 <div className="flex flex-wrap gap-2 pt-2">
+                    <Button onClick={handleGenerateReport} disabled={isGenerating}>
+                        {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                        {isGenerating ? 'Generating...' : 'Generate AI Summary'}
+                    </Button>
+                    <Button variant="secondary" onClick={() => handleCopyToClipboard(selectedReport.generatedReport)}><Clipboard className="mr-2 h-4 w-4" />Copy</Button>
+                    <Button variant="outline" onClick={() => handleExport(selectedReport)}><Download className="mr-2 h-4 w-4" />Export .txt</Button>
+                </div>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                <div className="md:col-span-2">
+                    <h3 className="font-semibold text-lg mb-2">AI-Generated Summary</h3>
+                    <ScrollArea className="h-[calc(100vh-32rem)] w-full rounded-md border bg-background/50 p-4">
+                        <MarkdownPreview content={selectedReport.generatedReport}/>
+                    </ScrollArea>
+                </div>
+                <div className="md:col-span-1">
+                     <VisualReportCard report={selectedReport} />
+                </div>
+            </CardContent>
+        </Card>
       ) : (
         !isFetching && reports.length > 0 && (
              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 bg-muted rounded-lg">
