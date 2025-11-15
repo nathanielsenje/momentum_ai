@@ -79,10 +79,10 @@ export function ReportsClientPage() {
   }
   
   const handleGenerateEmail = async () => {
-    if (!selectedReport) return;
+    if (!selectedReport || !user) return;
     setIsGeneratingEmail(true);
     try {
-      const body = await generateEmailReportAction(selectedReport, selectedReportTasks, user!);
+      const body = await generateEmailReportAction(selectedReport, selectedReportTasks, { displayName: user.displayName, email: user.email });
       setEmailBody(body);
       setIsPreviewOpen(true);
     } catch (e) {

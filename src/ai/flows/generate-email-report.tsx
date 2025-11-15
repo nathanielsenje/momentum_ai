@@ -10,7 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import type { DailyReport, Task, User } from '@/lib/types';
+import type { DailyReport, Task } from '@/lib/types';
 import { EmailTemplate } from '@/components/reports/email-template';
 import {render} from '@react-email/render';
 
@@ -47,8 +47,7 @@ const GenerateEmailReportInputSchema = z.object({
   tasks: z.array(TaskSchema).describe('An array of tasks for that day.'),
   user: z.object({
     displayName: z.string().nullable().optional(),
-    email: z.string().nullable().optional(),
-  }).describe("The user's display name and email."),
+  }).describe("The user's display name."),
 });
 export type GenerateEmailReportInput = z.infer<typeof GenerateEmailReportInputSchema>;
 
