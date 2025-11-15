@@ -72,7 +72,7 @@ export function EmailPreviewDialog({ open, onOpenChange, report, emailBody, user
         <ScrollArea className="flex-grow border rounded-md overflow-hidden">
             <iframe srcDoc={emailBody} className="w-full h-full" />
         </ScrollArea>
-        <DialogFooter className="flex-wrap justify-end gap-2 pt-4">
+        <DialogFooter className="flex-wrap justify-end gap-2 pt-4 flex-shrink-0">
            <Button variant="outline" onClick={handleCopy} disabled={isSending}>
               <Copy className="mr-2 h-4 w-4" />
               Copy Email
