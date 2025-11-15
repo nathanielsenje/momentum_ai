@@ -9,7 +9,6 @@ import {
   Goal,
   CheckCircle2,
   Hourglass,
-  Loader2,
   RotateCcw,
 } from 'lucide-react';
 import {
@@ -21,17 +20,14 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { onClientWrite } from '@/app/actions';
 import type { DailyReport } from '@/lib/types';
 import { format, isToday, parseISO } from 'date-fns';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
 import {
-  getTasks,
   resetTodaysReport as resetTodaysReportInDb,
   updateTodaysReport as updateTodaysReportInDb,
 } from '@/lib/data-firestore';
-import { generateReportAction } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Separator } from '../ui/separator';
 
@@ -50,7 +46,6 @@ export function DailyReportCard() {
     endTime: 'Not set',
   });
   const [isPending, startTransition] = useTransition();
-  const [isGenerating, startGeneratingTransition] = useTransition();
   const { toast } = useToast();
 
   const handleReset = React.useCallback(() => {
@@ -123,37 +118,6 @@ export function DailyReportCard() {
     });
   };
 
-  const handleGenerateReport = () => {
-    if (!todaysReport || !firestore || !user) return;
-
-    startGeneratingTransition(async () => {
-      try {
-        const allTasks = await getTasks(firestore, user.uid);
-        const generatedText = await generateReportAction({
-          userId: user.uid,
-          report: todaysReport,
-          tasks: allTasks,
-        });
-
-        if (generatedText) {
-          const updatedReport = await updateTodaysReportInDb(firestore, user.uid, {
-            generatedReport: generatedText,
-          });
-          setTodaysReport(updatedReport);
-          toast({ title: 'AI summary generated!' });
-        } else {
-          throw new Error('Generated report text was empty.');
-        }
-      } catch (error) {
-        console.error('Failed to generate report:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Could not generate AI summary.',
-        });
-      }
-    });
-  };
-
   if (dataLoading) {
     return (
       <Card className="bg-secondary/30 border-primary/20">
@@ -181,7 +145,7 @@ export function DailyReportCard() {
           Daily Work Report
         </CardTitle>
         <CardDescription>
-          Log your work hours and generate a summary.
+          Log your work hours and get a summary of your day.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 flex-grow flex flex-col">
@@ -259,35 +223,13 @@ export function DailyReportCard() {
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-primary/10">
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="sm"
-                  onClick={handleGenerateReport}
-                  disabled={isGenerating || !todaysReport}
-                  className="flex-grow"
-                >
-                  {isGenerating ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileText className="mr-2 h-4 w-4" />
-                  )}
-                  {isGenerating ? 'Generating...' : 'Generate Report'}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Use AI to generate a work summary for the day.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
                 <TooltipTrigger asChild>
                     <Button
                         size="icon"
                         variant="ghost"
                         onClick={handleReset}
                         disabled={isPending}
-                        className="h-9 w-9"
+                        className="h-9 w-9 ml-auto"
                     >
                         <RotateCcw className="h-4 w-4" />
                     </Button>
