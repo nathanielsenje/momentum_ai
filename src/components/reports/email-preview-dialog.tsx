@@ -14,6 +14,7 @@ import { Loader2, Send, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { emailReportAction } from '@/app/actions';
 import type { DailyReport } from '@/lib/types';
+import { ScrollArea } from '../ui/scroll-area';
 
 interface EmailPreviewDialogProps {
   open: boolean;
@@ -49,8 +50,12 @@ export function EmailPreviewDialog({ open, onOpenChange, report, emailBody, user
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(emailBody);
-    toast({ title: 'Email HTML copied to clipboard!' });
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = emailBody;
+    const plainText = tempDiv.textContent || tempDiv.innerText || "";
+    
+    navigator.clipboard.writeText(plainText.trim());
+    toast({ title: 'Email content copied to clipboard!' });
   };
 
 
@@ -63,10 +68,10 @@ export function EmailPreviewDialog({ open, onOpenChange, report, emailBody, user
             Review the generated email report before sending.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-grow border rounded-md overflow-hidden">
+        <ScrollArea className="flex-grow border rounded-md overflow-hidden">
             <iframe srcDoc={emailBody} className="w-full h-full" />
-        </div>
-        <DialogFooter className="flex-wrap justify-end gap-2">
+        </ScrollArea>
+        <DialogFooter className="flex-wrap justify-end gap-2 pt-4">
            <Button variant="outline" onClick={handleCopy} disabled={isSending}>
               <Copy className="mr-2 h-4 w-4" />
               Copy Email
