@@ -10,14 +10,38 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import type { DailyReport, Task } from '@/lib/types';
+import type { DailyReport, Task, User } from '@/lib/types';
 import { EmailTemplate } from '@/components/reports/email-template';
 import {render} from '@react-email/render';
 
 
+const TaskSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: z.string(),
+  energyLevel: z.enum(['Low', 'Medium', 'High']),
+  completed: z.boolean(),
+  completedAt: z.string().nullable(),
+  createdAt: z.string(),
+  projectId: z.string().optional(),
+  deadline: z.string().optional(),
+  effort: z.number().optional(),
+  focusType: z.enum(['Creative', 'Analytical', 'Physical', 'Administrative']).optional(),
+  score: z.number().optional(),
+  priority: z.enum(['Urgent & Important', 'Important & Not Urgent', 'Urgent & Not Important', 'Not Urgent & Not Important']).optional(),
+});
+
+const DailyReportSchema = z.object({
+    date: z.string(),
+    userId: z.string(),
+    startTime: z.string().nullable(),
+    endTime: z.string().nullable(),
+    generatedReport: z.string().nullable(),
+});
+
 const GenerateEmailReportInputSchema = z.object({
-  report: z.custom<DailyReport>().describe('The daily report object with timings.'),
-  tasks: z.array(z.custom<Task>()).describe('An array of tasks for that day.'),
+  report: DailyReportSchema.describe('The daily report object with timings.'),
+  tasks: z.array(TaskSchema).describe('An array of tasks for that day.'),
   user: z.object({
     displayName: z.string().nullable().optional(),
     email: z.string().nullable().optional(),
@@ -36,8 +60,8 @@ export async function generateEmailReport(input: GenerateEmailReportInput): Prom
   const emailHtml = render(
     <EmailTemplate
         userName={input.user.displayName || 'User'}
-        report={input.report}
-        tasks={input.tasks}
+        report={input.report as DailyReport}
+        tasks={input.tasks as Task[]}
         aiSummary={aiResponse.summary}
         greeting={aiResponse.greeting}
         collaborators={aiResponse.collaborators}
