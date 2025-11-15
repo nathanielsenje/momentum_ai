@@ -51,16 +51,16 @@ export function EmailPreviewDialog({ open, onOpenChange, report, emailBody, user
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Email Preview</DialogTitle>
           <DialogDescription>
             Review the generated email report before sending.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="h-[60vh] border rounded-md">
+        <div className="flex-grow border rounded-md overflow-hidden">
             <iframe srcDoc={emailBody} className="w-full h-full" />
-        </ScrollArea>
+        </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSending}>
             Cancel
