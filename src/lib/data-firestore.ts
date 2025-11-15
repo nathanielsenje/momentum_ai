@@ -309,16 +309,19 @@ export async function getTodaysReport(db: Firestore, userId: string): Promise<Da
         startTime: null,
         endTime: null,
         generatedReport: null,
+        goals: tasks.length,
+        completed: tasks.filter(t => t.completed).length,
     };
     
     const existingReport = reportSnap.exists() ? reportSnap.data() as DailyReport : defaultReport;
 
-    // We no longer store stats in the report doc, they are derived on the fly
     const updatedReport = {
         ...existingReport,
+        goals: tasks.length,
+        completed: tasks.filter(t => t.completed).length,
     };
 
-    if (!reportSnap.exists()) {
+    if (!reportSnap.exists() || reportSnap.data().goals !== updatedReport.goals || reportSnap.data().completed !== updatedReport.completed) {
         await setDoc(reportRef, updatedReport, { merge: true });
     }
 

@@ -62,6 +62,8 @@ export interface DailyReport {
   startTime: string | null;
   endTime: string | null;
   generatedReport: string | null;
+  goals: number;
+  completed: number;
 }
 
 export const ScoreAndSuggestTasksInputSchema = z.object({

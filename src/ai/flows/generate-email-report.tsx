@@ -17,6 +17,7 @@ import {render} from '@react-email/render';
 
 const TaskSchema = z.object({
   id: z.string(),
+  userId: z.string(),
   name: z.string(),
   category: z.string(),
   energyLevel: z.enum(['Low', 'Medium', 'High']),
@@ -37,6 +38,8 @@ const DailyReportSchema = z.object({
     startTime: z.string().nullable(),
     endTime: z.string().nullable(),
     generatedReport: z.string().nullable(),
+    goals: z.number(),
+    completed: z.number(),
 });
 
 const GenerateEmailReportInputSchema = z.object({
