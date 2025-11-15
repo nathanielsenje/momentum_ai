@@ -55,9 +55,9 @@ const prompt = ai.definePrompt({
     Based on the data provided, generate a concise summary of the day's work. The tone should be positive and professional, suitable for a report to a manager or team lead.
 
     Data:
-    - User: {{{user.displayName}}}
-    - Start Time: {{{report.startTime}}}
-    - End Time: {{{report.endTime}}}
+    - User: {{user.displayName}}
+    - Start Time: {{report.startTime}}
+    - End Time: {{report.endTime}}
     - Tasks: {{#each tasks}} - {{name}} (Completed: {{completed}}) {{/each}}
     
     Instructions:
