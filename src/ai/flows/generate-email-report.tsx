@@ -9,7 +9,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import type { DailyReport, Task } from '@/lib/types';
 import { EmailTemplate } from '@/components/reports/email-template';
 import {render} from '@react-email/render';

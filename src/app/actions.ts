@@ -1,10 +1,11 @@
+
 'use server';
 
 import { revalidatePath } from 'next/cache';
 import type { DailyReport, ScoreAndSuggestTasksInput, Task } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { updateUserProfile } from '@/lib/data-firestore';
-import { generateEmailReport as generateEmailReportFlow } from '@/ai/flows/generate-email-report';
+import { generateEmailReport as generateEmailReportFlow } from '@/ai/flows/generate-email-report.tsx';
 import { EmailTemplate } from '@/components/reports/email-template';
 import { Resend } from 'resend';
 
