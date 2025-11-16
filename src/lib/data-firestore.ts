@@ -14,7 +14,7 @@ import {
   setDoc,
   Firestore,
 } from 'firebase/firestore';
-import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, RecurringTask, DailyReport } from './types';
+import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, RecurringTask, DailyReport, WorkdayTask } from './types';
 import { format, isSameDay, parseISO, subDays } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -345,6 +345,74 @@ export async function resetTodaysReport(db: Firestore, userId: string): Promise<
     generatedReport: null,
   };
   return await updateTodaysReport(db, userId, updates);
+}
+
+// Workday Task Functions
+export async function getWorkdayTasks(db: Firestore, userId: string, date: string): Promise<WorkdayTask[]> {
+  const workdayCol = collection(db, 'users', userId, 'workday-tasks');
+  const q = query(workdayCol, where('date', '==', date));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WorkdayTask));
+}
+
+export async function addWorkdayTask(
+  db: Firestore,
+  userId: string,
+  taskId: string,
+  taskType: 'regular' | 'recurring',
+  date?: string
+): Promise<WorkdayTask> {
+  const today = date || getToday();
+  const workdayCol = collection(db, 'users', userId, 'workday-tasks');
+
+  const newWorkdayTask = {
+    userId,
+    date: today,
+    taskId,
+    taskType,
+    notes: null,
+    addedAt: new Date().toISOString(),
+  };
+
+  const docRef = await addDoc(workdayCol, newWorkdayTask);
+  return { id: docRef.id, ...newWorkdayTask };
+}
+
+export async function removeWorkdayTask(db: Firestore, userId: string, workdayTaskId: string): Promise<void> {
+  const taskRef = doc(db, 'users', userId, 'workday-tasks', workdayTaskId);
+  return deleteDoc(taskRef);
+}
+
+export async function updateWorkdayTaskNotes(
+  db: Firestore,
+  userId: string,
+  workdayTaskId: string,
+  notes: string
+): Promise<void> {
+  const taskRef = doc(db, 'users', userId, 'workday-tasks', workdayTaskId);
+  return updateDoc(taskRef, { notes });
+}
+
+export async function getAllAvailableTasks(db: Firestore, userId: string): Promise<Array<Task & { source: 'regular' | 'recurring' }>> {
+  const regularTasks = await getTasks(db, userId);
+  const recurringTasks = await getRecurringTasks(db, userId);
+
+  // Convert recurring tasks to task format
+  const recurringAsTaskFormat = recurringTasks.map(rt => ({
+    id: rt.id,
+    userId: rt.userId,
+    name: rt.name,
+    category: 'personal', // Default category for recurring tasks
+    energyLevel: 'Medium' as EnergyLevel,
+    completed: false,
+    completedAt: null,
+    createdAt: rt.lastCompleted || new Date().toISOString(),
+    source: 'recurring' as const,
+  }));
+
+  const regularWithSource = regularTasks.map(t => ({ ...t, source: 'regular' as const }));
+
+  return [...regularWithSource, ...recurringAsTaskFormat];
 }
 
 // User Profile

@@ -55,6 +55,16 @@ export interface RecurringTask {
   lastCompleted: string | null;
 }
 
+export interface WorkdayTask {
+  id: string;
+  userId: string;
+  date: string; // YYYY-MM-DD
+  taskId: string; // References task in tasks or recurring-tasks collection
+  taskType: 'regular' | 'recurring';
+  notes: string | null; // Notes added at end of day
+  addedAt: string; // ISO timestamp
+}
+
 export interface DailyReport {
   date: string; // YYYY-MM-DD
   userId: string;
@@ -63,6 +73,9 @@ export interface DailyReport {
   generatedReport: string | null;
   goals: number;
   completed: number;
+  taskNotes?: Record<string, string>; // Map of taskId to notes
+  completedTaskIds?: string[];
+  incompletedTaskIds?: string[];
 }
 
 export const ScoreAndSuggestTasksInputSchema = z.object({

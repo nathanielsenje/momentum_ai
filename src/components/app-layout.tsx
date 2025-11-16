@@ -110,9 +110,21 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 <SidebarMenuButton
                   asChild
                   isActive={pathname === '/'}
-                  tooltip="Dashboard"
+                  tooltip="Workday"
                 >
                   <Link href="/">
+                    <CalendarDays />
+                    <span>Workday</span>
+                  </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/dashboard'}
+                  tooltip="Dashboard"
+                >
+                  <Link href="/dashboard">
                     <Gauge />
                     <span>Dashboard</span>
                   </Link>
@@ -149,20 +161,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   tooltip="Weekly Planner"
                 >
                   <Link href="/weekly-planner">
-                    <CalendarDays />
+                    <Activity />
                     <span>Weekly Planner</span>
-                  </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/reports'}
-                  tooltip="Reports"
-                >
-                  <Link href="/reports">
-                    <FileText />
-                    <span>Reports</span>
                   </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>

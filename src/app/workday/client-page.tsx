@@ -2,15 +2,14 @@
 
 import * as React from 'react';
 import { MomentumCard } from '@/components/dashboard/momentum-card';
-import { TaskList } from '@/components/dashboard/task-list';
 import { Pomodoro } from '@/components/dashboard/pomodoro';
 import { ProjectOverview } from '@/components/dashboard/project-overview';
-import { DailyReportCard } from '@/components/dashboard/daily-report-card';
+import { WorkdayTasksCard } from '@/components/workday/workday-tasks-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 
-export function DashboardClientPage() {
+export function WorkdayClientPage() {
   const { user, loading: userLoading } = useUser();
   const { loading: dataLoading } = useDashboardData();
 
@@ -32,25 +31,20 @@ export function DashboardClientPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Top Row: Actions */}
+      {/* Top Row: Momentum & Pomodoro */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <MomentumCard />
         <Pomodoro />
       </div>
 
-      {/* Main Content: Task List */}
+      {/* Main Content: Workday Tasks */}
       <div>
-        <TaskList />
+        <WorkdayTasksCard />
       </div>
 
-      {/* Bottom Row: Overviews */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2">
-            <ProjectOverview />
-        </div>
-        <div className="lg:col-span-1">
-            <DailyReportCard />
-        </div>
+      {/* Bottom Row: Projects Overview */}
+      <div>
+        <ProjectOverview />
       </div>
     </div>
   );
