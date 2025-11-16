@@ -39,6 +39,7 @@ import type { Category, Project, Task } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
+import { Textarea } from '../ui/textarea';
 
 const taskFormSchema = z.object({
   name: z.string().min(3, 'Task name must be at least 3 characters.'),
@@ -46,9 +47,9 @@ const taskFormSchema = z.object({
   energyLevel: z.enum(['Low', 'Medium', 'High']),
   projectId: z.string().optional(),
   deadline: z.date().optional(),
-  effort: z.coerce.number().min(1).max(3).optional(),
-  focusType: z.enum(['Creative', 'Analytical', 'Physical', 'Administrative']).optional(),
   priority: z.enum(['Urgent & Important', 'Important & Not Urgent', 'Urgent & Not Important', 'Not Urgent & Not Important']).optional(),
+  collaboration: z.string().optional(),
+  details: z.string().optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
@@ -80,6 +81,8 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
       category: '',
       energyLevel: 'Medium',
       projectId: 'none',
+      collaboration: '',
+      details: '',
     },
   });
 
@@ -91,9 +94,9 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
             energyLevel: task.energyLevel,
             projectId: task.projectId || 'none',
             deadline: task.deadline ? new Date(task.deadline) : undefined,
-            effort: task.effort,
-            focusType: task.focusType,
             priority: task.priority,
+            collaboration: task.collaboration,
+            details: task.details,
         });
     } else if (!open) {
         form.reset({
@@ -102,9 +105,9 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
           energyLevel: 'Medium',
           projectId: 'none',
           deadline: undefined,
-          effort: undefined,
-          focusType: undefined,
           priority: undefined,
+          collaboration: '',
+          details: '',
         });
     }
   }, [open, task, form]);
@@ -159,6 +162,54 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="energyLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Energy Level</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                       <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select energy level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="High">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <FormField
                   control={form.control}
@@ -227,101 +278,6 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                     )}
                  />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="energyLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Energy Level</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select energy level" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Low">Low</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="High">High</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-               <FormField
-                control={form.control}
-                name="effort"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Effort (1-3)</FormLabel>
-                    <Select onValueChange={(v) => field.onChange(parseInt(v))} value={field.value?.toString() ?? ''}>
-                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select effort" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="1">1 (Low)</SelectItem>
-                        <SelectItem value="2">2 (Medium)</SelectItem>
-                        <SelectItem value="3">3 (High)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name="focusType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Focus Type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value ?? ''}>
-                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select focus type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Creative">Creative</SelectItem>
-                        <SelectItem value="Analytical">Analytical</SelectItem>
-                        <SelectItem value="Physical">Physical</SelectItem>
-                        <SelectItem value="Administrative">Administrative</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
              <FormField
                 control={form.control}
                 name="priority"
@@ -345,6 +301,36 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                   </FormItem>
                 )}
               />
+               <FormField
+                control={form.control}
+                name="collaboration"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Collaboration</FormLabel>
+                    <FormControl>
+                        <Input placeholder="e.g., with Jane Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            <FormField
+              control={form.control}
+              name="details"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Task Details</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Add any relevant details, links, or notes..."
+                      className="resize-y"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <DialogFooter className={cn(
               "pt-4",
               isEditing ? "sm:justify-between" : "sm:justify-end"
@@ -387,5 +373,3 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
     </Dialog>
   );
 }
-
-    

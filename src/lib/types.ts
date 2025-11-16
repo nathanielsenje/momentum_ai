@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 export type EnergyLevel = 'Low' | 'Medium' | 'High';
-export type FocusType = 'Creative' | 'Analytical' | 'Physical' | 'Administrative';
 export type ProjectPriority = 'Low' | 'Medium' | 'High';
 export type EisenhowerMatrix = 'Urgent & Important' | 'Important & Not Urgent' | 'Urgent & Not Important' | 'Not Urgent & Not Important';
 
@@ -16,8 +15,8 @@ export interface Task {
   createdAt: string;
   projectId?: string;
   deadline?: string;
-  effort?: number; // 1-3 scale
-  focusType?: FocusType;
+  collaboration?: string;
+  details?: string;
   score?: number; // AI-generated score
   priority?: EisenhowerMatrix;
 }

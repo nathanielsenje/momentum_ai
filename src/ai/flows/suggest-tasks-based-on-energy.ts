@@ -14,31 +14,6 @@ export async function scoreAndSuggestTasks(
 ) {
     const relevantCompletedTasks = completedTasks.filter(task => task.energyLevel === energyLevel);
     
-    let preferredFocus: string | null = null;
-    let preferredEffort: number | null = null;
-
-    if (relevantCompletedTasks.length > 0) {
-        const focusCounts: Record<string, number> = {};
-        const effortCounts: Record<string, number> = {};
-
-        relevantCompletedTasks.forEach(task => {
-            if (task.focusType) {
-                focusCounts[task.focusType] = (focusCounts[task.focusType] || 0) + 1;
-            }
-            if (task.effort) {
-                effortCounts[task.effort] = (effortCounts[task.effort] || 0) + 1;
-            }
-        });
-
-        if (Object.keys(focusCounts).length > 0) {
-            preferredFocus = Object.keys(focusCounts).reduce((a, b) => focusCounts[a] > focusCounts[b] ? a : b);
-        }
-        if (Object.keys(effortCounts).length > 0) {
-            const preferredEffortStr = Object.keys(effortCounts).reduce((a, b) => effortCounts[a] > effortCounts[b] ? a : b);
-            preferredEffort = parseInt(preferredEffortStr, 10);
-        }
-    }
-
 
     const scoredTasks = tasks
         .filter(task => !task.completed)
@@ -59,9 +34,7 @@ export async function scoreAndSuggestTasks(
             const project = projects.find(p => p.id === task.projectId);
             const projectPriority = project?.priority === 'High' ? 1 : (project?.priority === 'Medium' ? 0.5 : 0.1);
             
-            const focusMatch = (preferredFocus && task.focusType === preferredFocus) ? 0.2 : 0;
-            const effortMatch = (preferredEffort && task.effort === preferredEffort) ? 0.1 : 0;
-            const adaptiveBonus = focusMatch + effortMatch;
+            const adaptiveBonus = 0; // Placeholder for future adaptive logic
 
             const score = (energyMatch * 0.5) + (urgency * 0.3) + (projectPriority * 0.2) + adaptiveBonus;
 

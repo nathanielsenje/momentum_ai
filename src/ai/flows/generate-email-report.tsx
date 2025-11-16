@@ -26,10 +26,10 @@ const TaskSchema = z.object({
   createdAt: z.string(),
   projectId: z.string().optional(),
   deadline: z.string().optional(),
-  effort: z.number().optional(),
-  focusType: z.enum(['Creative', 'Analytical', 'Physical', 'Administrative']).optional(),
   score: z.number().optional(),
   priority: z.enum(['Urgent & Important', 'Important & Not Urgent', 'Urgent & Not Important', 'Not Urgent & Not Important']).optional(),
+  collaboration: z.string().optional(),
+  details: z.string().optional(),
 });
 
 const DailyReportSchema = z.object({
