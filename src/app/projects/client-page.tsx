@@ -35,7 +35,7 @@ const projectFormSchema = z.object({
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 export function ProjectClientPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isUserLoading: userLoading } = useUser();
   const firestore = useFirestore();
   const { projects: initialProjects, tasks, loading: dataLoading, setProjects: setAllProjects } = useDashboardData();
   

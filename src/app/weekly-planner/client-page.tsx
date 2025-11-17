@@ -17,7 +17,7 @@ import { addTask } from '@/lib/data-firestore';
 import { onClientWrite } from '@/app/actions';
 
 export function WeeklyPlannerClientPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isUserLoading: userLoading } = useUser();
   const firestore = useFirestore();
   const { projects, categories, loading: dataLoading, tasks, setTasks } = useDashboardData();
   

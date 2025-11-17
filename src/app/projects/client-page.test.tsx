@@ -3,10 +3,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ProjectClientPage } from './client-page';
 import { describe, it, expect, vi } from 'vitest';
 import { useUser, useFirestore } from '@/firebase';
-import { getProjects, getTasks } from '@/lib/data-firestore';
-import { createProjectAction } from '@/app/actions';
+import { getProjects, getTasks, addProject } from '@/lib/data-firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
+import type { User } from 'firebase/auth';
+import type { Firestore } from 'firebase/firestore';
 
 // Mock dependencies
 vi.mock('@/firebase', () => ({
@@ -21,33 +23,58 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/data-firestore', () => ({
   getProjects: vi.fn(),
   getTasks: vi.fn(),
+  addProject: vi.fn(),
+  updateProject: vi.fn(),
+  deleteProject: vi.fn(),
 }));
 
 vi.mock('@/app/actions', () => ({
-  createProjectAction: vi.fn(),
-  deleteProjectAction: vi.fn(),
-  updateProjectAction: vi.fn(),
+  onClientWrite: vi.fn(),
 }));
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: vi.fn(() => ({ toast: vi.fn() })),
 }));
 
+vi.mock('@/hooks/use-dashboard-data', () => ({
+  useDashboardData: vi.fn(),
+}));
+
 describe('ProjectClientPage', () => {
   it('should allow a user to add a new project', async () => {
     // Arrange
-    const mockUser = { uid: '123' };
-    const mockFirestore = {};
+    const mockUser = { uid: '123' } as User;
+    const mockFirestore = {} as Firestore;
     const mockProjects = [
-      { id: '1', name: 'Existing Project', userId: '123', createdAt: new Date() },
+      { id: '1', name: 'Existing Project', userId: '123', priority: 'Medium' as const },
     ];
-    const newProject = { id: '2', name: 'New Project', userId: '123', createdAt: new Date() };
+    const mockSetProjects = vi.fn();
+    const newProject = { id: '2', name: 'New Project', userId: '123', priority: 'Medium' as const };
 
-    vi.mocked(useUser).mockReturnValue({ user: mockUser, loading: false });
+    vi.mocked(useUser).mockReturnValue({ user: mockUser, isUserLoading: false, userError: null });
     vi.mocked(useFirestore).mockReturnValue(mockFirestore);
     vi.mocked(getProjects).mockResolvedValue(mockProjects);
     vi.mocked(getTasks).mockResolvedValue([]);
-    vi.mocked(createProjectAction).mockResolvedValue(newProject);
+    vi.mocked(addProject).mockResolvedValue(newProject);
+    vi.mocked(useDashboardData).mockReturnValue({
+      projects: mockProjects,
+      tasks: [],
+      categories: [],
+      recurringTasks: [],
+      energyLog: [],
+      todayEnergy: undefined,
+      latestMomentum: undefined,
+      todaysReport: null,
+      loading: false,
+      error: null,
+      setTasks: vi.fn(),
+      setProjects: mockSetProjects,
+      setRecurringTasks: vi.fn(),
+      setTodaysReport: vi.fn(),
+      setTodayEnergy: vi.fn(),
+      setLatestMomentum: vi.fn(),
+      refetchData: vi.fn(),
+    });
 
     render(<ProjectClientPage />);
 
@@ -60,11 +87,11 @@ describe('ProjectClientPage', () => {
 
     // Assert
     await waitFor(() => {
-      expect(createProjectAction).toHaveBeenCalledWith(mockUser.uid, 'New Project');
+      expect(addProject).toHaveBeenCalledWith(mockFirestore, mockUser.uid, { name: 'New Project', priority: 'Medium' });
     });
-    
+
     await waitFor(() => {
-        expect(screen.getByText('New Project')).toBeInTheDocument();
+        expect(mockSetProjects).toHaveBeenCalled();
     });
   });
 });

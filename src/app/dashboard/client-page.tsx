@@ -61,7 +61,7 @@ const CHART_COLORS = [
 ];
 
 export function DashboardClientPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isUserLoading: userLoading } = useUser();
   const firestore = useFirestore();
   const { tasks, categories, loading: dataLoading } = useDashboardData();
   const { toast } = useToast();

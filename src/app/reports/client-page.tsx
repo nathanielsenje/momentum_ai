@@ -17,7 +17,7 @@ import { generateEmailReportAction } from '../actions';
 import { EmailPreviewDialog } from '@/components/reports/email-preview-dialog';
 
 export function ReportsClientPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isUserLoading: userLoading } = useUser();
   const firestore = useFirestore();
   const { loading: dataLoading } = useDashboardData();
 

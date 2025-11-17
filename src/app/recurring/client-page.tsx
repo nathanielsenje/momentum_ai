@@ -25,7 +25,7 @@ import { addRecurringTask, updateRecurringTask } from '@/lib/data-firestore';
 import { onClientWrite } from '@/app/actions';
 
 export function RecurringTasksClientPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isUserLoading: userLoading } = useUser();
   const firestore = useFirestore();
   const { recurringTasks: initialTasks, setRecurringTasks, loading: dataLoading } = useDashboardData();
 

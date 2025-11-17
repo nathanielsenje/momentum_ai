@@ -10,7 +10,7 @@ import { useUser } from '@/firebase';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 export function WorkdayClientPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isUserLoading: userLoading } = useUser();
   const { loading: dataLoading } = useDashboardData();
 
   if (userLoading || dataLoading || !user) {

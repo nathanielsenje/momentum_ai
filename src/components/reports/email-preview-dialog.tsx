@@ -49,14 +49,44 @@ export function EmailPreviewDialog({ open, onOpenChange, report, emailBody, user
     }
   };
 
-  const handleCopy = () => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = emailBody;
-    // Use innerText to preserve line breaks and basic formatting
-    const plainText = tempDiv.innerText || "";
-    
-    navigator.clipboard.writeText(plainText.trim());
-    toast({ title: 'Email content copied to clipboard!' });
+  const handleCopy = async () => {
+    try {
+      // Create a temporary div to parse the HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = emailBody;
+
+      // Get the formatted text content
+      const textContent = tempDiv.innerText || tempDiv.textContent || "";
+      const trimmedText = textContent.trim();
+
+      // Try modern clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(trimmedText);
+      } else {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = trimmedText;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+
+      toast({ title: 'Email copied to clipboard!' });
+    } catch (error: unknown) {
+      console.error('Copy failed:', error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'Unable to copy to clipboard. Please try again.';
+
+      toast({
+        variant: 'destructive',
+        title: 'Failed to copy',
+        description: errorMessage,
+      });
+    }
   };
 
 
@@ -69,8 +99,11 @@ export function EmailPreviewDialog({ open, onOpenChange, report, emailBody, user
             Review the generated email report before sending.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-grow border rounded-md overflow-hidden">
-            <iframe srcDoc={emailBody} className="w-full h-full" />
+        <ScrollArea className="flex-grow border rounded-md p-6 bg-muted/30">
+          <div
+            className="prose prose-sm dark:prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: emailBody }}
+          />
         </ScrollArea>
         <DialogFooter className="flex-wrap justify-end gap-2 pt-4 flex-shrink-0">
            <Button variant="outline" onClick={handleCopy} disabled={isSending}>

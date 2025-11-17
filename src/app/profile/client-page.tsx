@@ -62,7 +62,7 @@ const CHART_COLORS = [
 ];
 
 export function ProfileClientPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, isUserLoading: userLoading } = useUser();
   const firestore = useFirestore();
   const { tasks, categories, loading: dataLoading } = useDashboardData();
   const router = useRouter();
