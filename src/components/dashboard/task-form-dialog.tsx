@@ -65,9 +65,10 @@ interface TaskFormDialogProps {
     onDelete?: (taskId: string) => void;
     isPending: boolean;
     children?: React.ReactNode;
+    defaultDeadline?: Date | null;
 }
 
-export function TaskFormDialog({ task, categories, projects, open: externalOpen, onOpenChange: externalOnOpenChange, onSave, onDelete, isPending, children }: TaskFormDialogProps) {
+export function TaskFormDialog({ task, categories, projects, open: externalOpen, onOpenChange: externalOnOpenChange, onSave, onDelete, isPending, children, defaultDeadline }: TaskFormDialogProps) {
   const [internalOpen, setInternalOpen] = React.useState(false);
 
   const isEditing = !!task;
@@ -98,6 +99,17 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
             collaboration: task.collaboration,
             details: task.details,
         });
+    } else if (open && !task && defaultDeadline) {
+        form.reset({
+          name: '',
+          category: '',
+          energyLevel: 'Medium',
+          projectId: 'none',
+          deadline: defaultDeadline,
+          priority: undefined,
+          collaboration: '',
+          details: '',
+        });
     } else if (!open) {
         form.reset({
           name: '',
@@ -110,7 +122,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
           details: '',
         });
     }
-  }, [open, task, form]);
+  }, [open, task, form, defaultDeadline]);
 
 
   const onSubmit = (data: TaskFormValues) => {

@@ -7,11 +7,14 @@ import { format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 export function Header() {
   const [currentTime, setCurrentTime] = React.useState<Date>(new Date());
   const [mounted, setMounted] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
   const { user } = useUser();
+  const router = useRouter();
 
   React.useEffect(() => {
     setMounted(true);
@@ -22,12 +25,26 @@ export function Header() {
     return () => clearInterval(timer);
   }, []);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    } else {
+      router.push('/search');
+    }
+  };
+
   return (
     <header className="hidden md:flex items-center justify-between p-4 md:p-6 lg:p-8 pt-0">
-      <div className="relative w-full max-w-sm">
+      <form onSubmit={handleSearch} className="relative w-full max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search..." className="pl-9" />
-      </div>
+        <Input
+          placeholder="Search..."
+          className="pl-9"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </form>
       <div className="flex items-center gap-4">
         <div className="flex flex-col items-end gap-1 text-sm text-muted-foreground">
           <span suppressHydrationWarning>

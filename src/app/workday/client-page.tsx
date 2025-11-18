@@ -5,13 +5,16 @@ import { MomentumCard } from '@/components/dashboard/momentum-card';
 import { Pomodoro } from '@/components/dashboard/pomodoro';
 import { ProjectOverview } from '@/components/dashboard/project-overview';
 import { WorkdayTasksCard } from '@/components/workday/workday-tasks-card';
+import { YouTubePlayer } from '@/components/dashboard/youtube-player';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { PomodoroContext } from '@/components/dashboard/pomodoro-provider';
 
 export function WorkdayClientPage() {
   const { user, isUserLoading: userLoading } = useUser();
   const { loading: dataLoading } = useDashboardData();
+  const { isTimerActive } = React.useContext(PomodoroContext);
 
   if (userLoading || dataLoading || !user) {
     return (
@@ -42,8 +45,9 @@ export function WorkdayClientPage() {
         <WorkdayTasksCard />
       </div>
 
-      {/* Bottom Row: Projects Overview */}
-      <div>
+      {/* Music Player & Projects Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <YouTubePlayer isTimerActive={isTimerActive} />
         <ProjectOverview />
       </div>
     </div>

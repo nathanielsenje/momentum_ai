@@ -316,8 +316,16 @@ export function WorkdayTasksCard() {
             {workdayTasksWithDetails.length === 0 && (
               <div className="text-center text-sm text-muted-foreground py-12">
                 <CalendarCheck2 className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                <p className="font-medium">No tasks planned for today</p>
-                <p className="mt-1">Click "Add Tasks" to start planning your workday</p>
+                <p className="font-medium mb-4">No tasks planned for today</p>
+                <Button
+                  size="lg"
+                  onClick={() => setShowAddDialog(true)}
+                  className="mx-auto"
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  Start Work Day
+                </Button>
+                <p className="mt-3 text-xs">Select tasks from your recurring tasks and weekly planner</p>
               </div>
             )}
           </div>

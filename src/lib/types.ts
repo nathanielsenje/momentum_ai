@@ -51,8 +51,16 @@ export interface RecurringTask {
   id: string;
   userId: string;
   name: string;
+  category: string;
+  energyLevel: EnergyLevel;
   frequency: 'Weekly' | 'Monthly';
   lastCompleted: string | null;
+  createdAt: string;
+  projectId?: string;
+  deadline?: string;
+  collaboration?: string;
+  details?: string;
+  priority?: EisenhowerMatrix;
 }
 
 export interface WorkdayTask {

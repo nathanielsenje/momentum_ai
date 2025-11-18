@@ -20,9 +20,11 @@ export function WeeklyPlannerClientPage() {
   const { user, isUserLoading: userLoading } = useUser();
   const firestore = useFirestore();
   const { projects, categories, loading: dataLoading, tasks, setTasks } = useDashboardData();
-  
+
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [isPending, startTransition] = useTransition();
+  const [showTaskDialog, setShowTaskDialog] = React.useState(false);
+  const [selectedDeadline, setSelectedDeadline] = React.useState<Date | null>(null);
   const { toast } = useToast();
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
@@ -42,6 +44,8 @@ export function WeeklyPlannerClientPage() {
       try {
         const newTask = await addTask(firestore, user.uid, taskData);
         setTasks(prevTasks => [...prevTasks, newTask]);
+        setShowTaskDialog(false);
+        setSelectedDeadline(null);
         toast({
           title: 'Task created!',
           description: 'Your new task has been added to the planner.',
@@ -57,14 +61,16 @@ export function WeeklyPlannerClientPage() {
     });
   };
 
-  const handleAddTaskInline = (taskName: string, day: Date) => {
-     if (!user) return;
-    handleCreateTask({
-      name: taskName,
-      deadline: day.toISOString(),
-      category: 'personal', // Default category
-      energyLevel: 'Medium' // Default energy level
-    });
+  const handleAddTaskClick = (day: Date) => {
+    setSelectedDeadline(day);
+    setShowTaskDialog(true);
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setShowTaskDialog(open);
+    if (!open) {
+      setSelectedDeadline(null);
+    }
   };
   
   const goToPreviousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
@@ -98,17 +104,10 @@ export function WeeklyPlannerClientPage() {
                         </Button>
                     </div>
                 </div>
-                 <TaskFormDialog
-                    categories={categories}
-                    projects={projects}
-                    onSave={handleCreateTask}
-                    isPending={isPending}
-                >
-                    <Button className="w-full sm:w-auto">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Detailed Task
-                    </Button>
-                </TaskFormDialog>
+                <Button className="w-full sm:w-auto" onClick={() => setShowTaskDialog(true)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Task
+                </Button>
             </div>
         </CardHeader>
         <CardContent>
@@ -118,12 +117,21 @@ export function WeeklyPlannerClientPage() {
                         key={day.toISOString()}
                         day={day}
                         tasks={getTasksForDay(day)}
-                        onAddTask={handleAddTaskInline}
-                        isPending={isPending}
+                        onAddTaskClick={handleAddTaskClick}
                     />
                 ))}
             </div>
         </CardContent>
+
+        <TaskFormDialog
+            categories={categories}
+            projects={projects}
+            onSave={handleCreateTask}
+            isPending={isPending}
+            open={showTaskDialog}
+            onOpenChange={handleDialogOpenChange}
+            defaultDeadline={selectedDeadline}
+        />
     </Card>
   );
 }

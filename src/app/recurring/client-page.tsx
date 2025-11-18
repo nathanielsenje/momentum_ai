@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Check, X, PlusCircle } from 'lucide-react';
 import { isThisWeek, isThisMonth, parseISO, format } from 'date-fns';
-import { AddRecurringTaskDialog } from '@/components/recurring/add-recurring-task-dialog';
+import { RecurringTaskFormDialog } from '@/components/recurring/recurring-task-form-dialog';
 import type { RecurringTask } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
@@ -56,12 +56,15 @@ export function RecurringTasksClientPage() {
     });
   }
 
-  const handleCreateRecurringTask = (taskData: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>) => {
+  const [showAddDialog, setShowAddDialog] = React.useState(false);
+
+  const handleCreateRecurringTask = (taskData: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId' | 'createdAt'>) => {
     if (!user || !firestore) return;
     startTransition(async () => {
       try {
         const newTask = await addRecurringTask(firestore, user.uid, taskData);
         setRecurringTasks(prev => [...prev, newTask]);
+        setShowAddDialog(false);
         toast({ title: 'Recurring task created!' });
         await onClientWrite();
       } catch (error) {
@@ -155,12 +158,10 @@ export function RecurringTasksClientPage() {
                 <h1 className="text-2xl font-bold">Recurring Tasks</h1>
                 <p className="text-muted-foreground">Manage your weekly and monthly tasks.</p>
             </div>
-            <AddRecurringTaskDialog onSave={handleCreateRecurringTask} isPending={isPending}>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Recurring Task
-                </Button>
-            </AddRecurringTaskDialog>
+            <Button onClick={() => setShowAddDialog(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Recurring Task
+            </Button>
         </div>
 
         <div className="grid gap-6 md:grid-cols-1">
@@ -184,6 +185,13 @@ export function RecurringTasksClientPage() {
                 </CardContent>
             </Card>
         </div>
+
+        <RecurringTaskFormDialog
+            open={showAddDialog}
+            onOpenChange={setShowAddDialog}
+            onSave={handleCreateRecurringTask}
+            isPending={isPending}
+        />
     </div>
   );
 }

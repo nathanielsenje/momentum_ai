@@ -7,15 +7,73 @@ import { Button } from '@/components/ui/button';
 import { PomodoroContext } from './pomodoro-provider';
 
 export function Pomodoro() {
-  const { focusedTask } = React.useContext(PomodoroContext);
+  const { focusedTask, isTimerActive, setIsTimerActive } = React.useContext(PomodoroContext);
   const [minutes, setMinutes] = React.useState(25);
   const [seconds, setSeconds] = React.useState(0);
-  const [isActive, setIsActive] = React.useState(false);
   const [sessionType, setSessionType] = React.useState<'Focus' | 'Break'>('Focus');
+  const [isInitialized, setIsInitialized] = React.useState(false);
+
+  // Restore timer state from localStorage on mount
+  React.useEffect(() => {
+    const savedState = localStorage.getItem('pomodoroState');
+    if (savedState) {
+      try {
+        const { minutes: savedMinutes, seconds: savedSeconds, isActive: savedIsActive, sessionType: savedSessionType, timestamp } = JSON.parse(savedState);
+
+        // If the timer was active, calculate elapsed time since last save
+        if (savedIsActive) {
+          const elapsed = Math.floor((Date.now() - timestamp) / 1000);
+          let remainingSeconds = savedMinutes * 60 + savedSeconds - elapsed;
+
+          if (remainingSeconds > 0) {
+            setMinutes(Math.floor(remainingSeconds / 60));
+            setSeconds(remainingSeconds % 60);
+            setIsTimerActive(true);
+            setSessionType(savedSessionType);
+          } else {
+            // Timer expired while closed, switch session
+            if (savedSessionType === 'Focus') {
+              setSessionType('Break');
+              setMinutes(5);
+              setSeconds(0);
+            } else {
+              setSessionType('Focus');
+              setMinutes(25);
+              setSeconds(0);
+            }
+            setIsTimerActive(false);
+          }
+        } else {
+          // Timer was paused, restore exact state
+          setMinutes(savedMinutes);
+          setSeconds(savedSeconds);
+          setSessionType(savedSessionType);
+          setIsTimerActive(false);
+        }
+      } catch (error) {
+        console.error('Failed to restore timer state:', error);
+      }
+    }
+    setIsInitialized(true);
+  }, [setIsTimerActive]);
+
+  // Save timer state to localStorage whenever it changes
+  React.useEffect(() => {
+    if (isInitialized) {
+      const state = {
+        minutes,
+        seconds,
+        isActive: isTimerActive,
+        sessionType,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem('pomodoroState', JSON.stringify(state));
+    }
+  }, [minutes, seconds, isTimerActive, sessionType, isInitialized]);
 
   React.useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (isActive) {
+    if (isTimerActive) {
       interval = setInterval(() => {
         if (seconds > 0) {
           setSeconds((s) => s - 1);
@@ -24,7 +82,7 @@ export function Pomodoro() {
           setSeconds(59);
         } else {
           // Timer finished
-          setIsActive(false);
+          setIsTimerActive(false);
           if (sessionType === 'Focus') {
             setSessionType('Break');
             setMinutes(5);
@@ -38,15 +96,15 @@ export function Pomodoro() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, seconds, minutes, sessionType]);
+  }, [isTimerActive, seconds, minutes, sessionType, setIsTimerActive]);
 
   const toggle = () => {
     if (!focusedTask) return;
-    setIsActive(!isActive);
+    setIsTimerActive(!isTimerActive);
   };
 
   const reset = () => {
-    setIsActive(false);
+    setIsTimerActive(false);
     setSessionType('Focus');
     setMinutes(25);
     setSeconds(0);
@@ -73,9 +131,9 @@ export function Pomodoro() {
             </div>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button onClick={toggle} size="lg" variant={isActive ? 'secondary' : 'default'} disabled={!focusedTask} className="flex-1 sm:flex-none">
-            {isActive ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
-            {isActive ? 'Pause' : 'Start'}
+          <Button onClick={toggle} size="lg" variant={isTimerActive ? 'secondary' : 'default'} disabled={!focusedTask} className="flex-1 sm:flex-none">
+            {isTimerActive ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
+            {isTimerActive ? 'Pause' : 'Start'}
           </Button>
           <Button onClick={reset} size="lg" variant="outline" disabled={!focusedTask} className="flex-1 sm:flex-none">
             <RotateCcw className="mr-2 h-4 w-4" />

@@ -265,10 +265,24 @@ export async function getRecurringTasks(db: Firestore, userId: string): Promise<
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RecurringTask));
 }
 
-export async function addRecurringTask(db: Firestore, userId: string, taskData: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>): Promise<RecurringTask> {
+export async function addRecurringTask(db: Firestore, userId: string, taskData: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId' | 'createdAt'>): Promise<RecurringTask> {
     const tasksCol = collection(db, 'users', userId, 'recurring-tasks');
-    const newTaskData = { ...taskData, lastCompleted: null, userId };
-    const docRef = await addDoc(tasksCol, newTaskData);
+    const newTaskData = {
+        ...taskData,
+        lastCompleted: null,
+        userId,
+        createdAt: new Date().toISOString()
+    };
+    const docRef = await addDoc(tasksCol, newTaskData)
+      .catch(async (serverError) => {
+          const permissionError = new FirestorePermissionError({
+            path: tasksCol.path,
+            operation: 'create',
+            requestResourceData: newTaskData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+          throw permissionError;
+      });
     return { id: docRef.id, ...newTaskData };
 }
 
@@ -402,11 +416,16 @@ export async function getAllAvailableTasks(db: Firestore, userId: string): Promi
     id: rt.id,
     userId: rt.userId,
     name: rt.name,
-    category: 'personal', // Default category for recurring tasks
-    energyLevel: 'Medium' as EnergyLevel,
+    category: rt.category,
+    energyLevel: rt.energyLevel,
     completed: false,
     completedAt: null,
-    createdAt: rt.lastCompleted || new Date().toISOString(),
+    createdAt: rt.createdAt,
+    projectId: rt.projectId,
+    deadline: rt.deadline,
+    collaboration: rt.collaboration,
+    details: rt.details,
+    priority: rt.priority,
     source: 'recurring' as const,
   }));
 
