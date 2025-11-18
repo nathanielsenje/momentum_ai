@@ -54,6 +54,9 @@ export function Header() {
         <p className="text-muted-foreground" suppressHydrationWarning>
             {mounted ? format(currentTime, 'eeee, MMMM d, yyyy') : format(new Date(), 'eeee, MMMM d, yyyy')}
         </p>
+         <p className="font-mono text-xs text-muted-foreground" suppressHydrationWarning>
+            {mounted ? format(currentTime, 'HH:mm:ss') : format(new Date(), 'HH:mm:ss')}
+        </p>
       </div>
       <div className="flex items-center gap-4">
         <form onSubmit={handleSearch} className="relative w-full max-w-xs">
@@ -65,9 +68,6 @@ export function Header() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </form>
-         <div className="font-bold bg-muted/50 px-3 py-2 rounded-md text-foreground text-sm" suppressHydrationWarning>
-            {mounted ? format(currentTime, 'HH:mm:ss') : format(new Date(), 'HH:mm:ss')}
-        </div>
       </div>
     </header>
   );
