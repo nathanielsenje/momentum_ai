@@ -47,6 +47,23 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
 
+  // Auto-switch theme based on system preference
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const handleThemeChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      setTheme(e.matches ? 'dark' : 'light');
+    };
+
+    // Set initial theme based on system preference
+    handleThemeChange(mediaQuery);
+
+    // Listen for changes
+    mediaQuery.addEventListener('change', handleThemeChange);
+
+    return () => mediaQuery.removeEventListener('change', handleThemeChange);
+  }, [setTheme]);
+
   React.useEffect(() => {
     if (!isUserLoading && !user && !isAuthPage) {
       router.push('/login');

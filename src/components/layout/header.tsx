@@ -1,19 +1,16 @@
+
 'use client';
 
 import * as React from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 
 export function Header() {
   const [currentTime, setCurrentTime] = React.useState<Date>(new Date());
   const [mounted, setMounted] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
-  const { user } = useUser();
   const router = useRouter();
 
   React.useEffect(() => {
@@ -51,16 +48,9 @@ export function Header() {
               {mounted ? format(currentTime, 'eeee, MMMM d') : format(new Date(), 'eeee, MMMM d')}
           </span>
           <span className="font-bold bg-muted/50 px-2 py-1 rounded-md text-foreground text-xs" suppressHydrationWarning>
-              {mounted ? format(currentTime, 'h:mm:ss a') : format(new Date(), 'h:mm:ss a')}
+              {mounted ? format(currentTime, 'HH:mm:ss') : format(new Date(), 'HH:mm:ss')}
           </span>
         </div>
-        <Separator orientation="vertical" className="h-10" />
-        <Avatar>
-            <AvatarImage src={user?.photoURL || undefined} />
-            <AvatarFallback>
-                {user?.displayName?.charAt(0) || 'U'}
-            </AvatarFallback>
-        </Avatar>
       </div>
     </header>
   );
