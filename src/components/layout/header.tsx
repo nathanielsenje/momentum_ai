@@ -46,8 +46,8 @@ export function Header() {
   }
 
   return (
-    <header className="hidden md:flex items-center justify-between p-4 md:p-6 lg:p-8 pt-0">
-      <div className="flex-1">
+    <header className="hidden md:flex items-start justify-between p-4 md:p-6 lg:p-8 pt-0">
+      <div className="flex-shrink-0">
         <h2 className="text-xl font-bold text-foreground">
           {getGreeting()}, {getFirstName()}!
         </h2>
@@ -58,8 +58,8 @@ export function Header() {
             {mounted ? format(currentTime, 'HH:mm:ss') : format(new Date(), 'HH:mm:ss')}
         </p>
       </div>
-      <div className="flex items-center gap-4">
-        <form onSubmit={handleSearch} className="relative w-full max-w-md">
+      <div className="flex items-start gap-4 flex-1 justify-end">
+        <form onSubmit={handleSearch} className="relative w-full max-w-2xl">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search tasks, projects..."

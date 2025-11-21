@@ -10,7 +10,7 @@ import { TaskFormDialog } from './task-form-dialog';
 import { QuickAddTask } from './quick-add-task';
 import type { Task, Category, EnergyLevel, Project, EisenhowerMatrix } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Zap, ZapOff, BatteryMedium, Target, ListTodo, Folder, PlayCircle, Shield, Edit } from 'lucide-react';
+import { Zap, ZapOff, Battery, Target, ListTodo, Folder, PlayCircle, Shield, Edit } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -33,7 +33,7 @@ import { onClientWrite, onTaskCompleted } from '@/app/actions';
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
   Low: ZapOff,
-  Medium: BatteryMedium,
+  Medium: Battery,
   High: Zap,
 };
 

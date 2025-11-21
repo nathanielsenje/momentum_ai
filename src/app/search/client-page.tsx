@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Zap, ZapOff, BatteryMedium, Folder, Calendar, Users, FileText } from 'lucide-react';
+import { Search, Zap, ZapOff, Battery, Folder, Calendar, Users, FileText } from 'lucide-react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,7 +17,7 @@ import { TaskFormDialog } from '@/components/dashboard/task-form-dialog';
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
   Low: ZapOff,
-  Medium: BatteryMedium,
+  Medium: Battery,
   High: Zap,
 };
 

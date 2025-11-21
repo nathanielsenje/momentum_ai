@@ -5,11 +5,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Task } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Zap, ZapOff, BatteryMedium } from 'lucide-react';
+import { Zap, ZapOff, Battery } from 'lucide-react';
 
 const energyIcons = {
   Low: ZapOff,
-  Medium: BatteryMedium,
+  Medium: Battery,
   High: Zap,
 };
 

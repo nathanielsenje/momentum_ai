@@ -61,6 +61,8 @@ export function EndDayDialog({
           category: t.category,
           energyLevel: t.energyLevel,
           notes: notes[t.id] || 'No notes provided',
+          completedAt: t.completedAt ?? undefined,
+          deadline: t.deadline ?? undefined,
         }));
 
         const incompleteWithNotes = incompleteTasks.map(t => ({
@@ -69,6 +71,7 @@ export function EndDayDialog({
           category: t.category,
           energyLevel: t.energyLevel,
           notes: notes[t.id] || 'No notes provided',
+          deadline: t.deadline ?? undefined,
         }));
 
         // Generate AI report

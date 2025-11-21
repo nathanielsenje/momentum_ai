@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useTransition } from 'react';
-import { Zap, ZapOff, BatteryMedium, ChevronDown } from 'lucide-react';
+import { Zap, ZapOff, Battery, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { EnergyLevel } from '@/lib/types';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -14,7 +14,7 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 const energyLevels: { level: EnergyLevel; icon: React.ElementType; description: string }[] = [
   { level: 'Low', icon: ZapOff, description: 'Gentle tasks' },
-  { level: 'Medium', icon: BatteryMedium, description: 'Steady pace' },
+  { level: 'Medium', icon: Battery, description: 'Steady pace' },
   { level: 'High', icon: Zap, description: 'Full power' },
 ];
 

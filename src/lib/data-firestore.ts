@@ -190,7 +190,11 @@ export async function calculateAndSaveMomentumScore(db: Firestore, userId: strin
 
     const scoreInput = {
         energyLevel: todayEnergy.level,
-        completedTasks: completedToday.map(t => ({ taskId: t.id, taskName: t.name, energyLevel: t.energyLevel })),
+        completedTasks: completedToday.map(t => ({
+            taskId: t.id,
+            taskName: t.name,
+            energyLevel: (t.energyLevel ?? 'Medium') as EnergyLevel
+        })),
         streakBonus,
     };
 
@@ -416,8 +420,8 @@ export async function getAllAvailableTasks(db: Firestore, userId: string): Promi
     id: rt.id,
     userId: rt.userId,
     name: rt.name,
-    category: rt.category,
-    energyLevel: rt.energyLevel,
+    category: rt.category ?? 'personal',
+    energyLevel: rt.energyLevel ?? 'Medium',
     completed: false,
     completedAt: null,
     createdAt: rt.createdAt,

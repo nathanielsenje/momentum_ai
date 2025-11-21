@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Task, WorkdayTask, EnergyLevel, EisenhowerMatrix } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Zap, ZapOff, BatteryMedium, Folder, PlayCircle, Shield, Plus, CalendarCheck2, X } from 'lucide-react';
+import { Zap, ZapOff, Battery, Folder, PlayCircle, Shield, Plus, CalendarCheck2, X } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -19,15 +19,15 @@ import { useToast } from '@/hooks/use-toast';
 import { PomodoroContext } from '../dashboard/pomodoro-provider';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
-import { updateTask, calculateAndSaveMomentumScore, getWorkdayTasks, removeWorkdayTask } from '@/lib/data-firestore';
+import { updateTask, updateRecurringTask, calculateAndSaveMomentumScore, getWorkdayTasks, removeWorkdayTask } from '@/lib/data-firestore';
 import { onClientWrite, onTaskCompleted } from '@/app/actions';
-import { format } from 'date-fns';
+import { format, isToday, parseISO } from 'date-fns';
 import { AddTasksDialog } from './add-tasks-dialog';
 import { EndDayDialog } from './end-day-dialog';
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
   Low: ZapOff,
-  Medium: BatteryMedium,
+  Medium: Battery,
   High: Zap,
 };
 
@@ -41,7 +41,7 @@ const priorityColors: Record<EisenhowerMatrix, string> = {
 export function WorkdayTasksCard() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { tasks: allTasks, categories, projects, todayEnergy, setTasks: setAllTasks } = useDashboardData();
+  const { tasks: allTasks, recurringTasks, categories, projects, todayEnergy, setTasks: setAllTasks, setRecurringTasks } = useDashboardData();
   const userId = user!.uid;
 
   const [isPending, startTransition] = useTransition();
@@ -71,41 +71,110 @@ export function WorkdayTasksCard() {
 
   // Get actual task details for workday tasks
   const workdayTasksWithDetails = workdayTasks.map(wt => {
-    const task = allTasks.find(t => t.id === wt.taskId);
+    let task: Task & { taskType: 'regular' | 'recurring' } | undefined;
+
+    if (wt.taskType === 'regular') {
+      const regularTask = allTasks.find(t => t.id === wt.taskId);
+      if (regularTask) {
+        task = { ...regularTask, taskType: 'regular' as const };
+      }
+    } else if (wt.taskType === 'recurring') {
+      // Find the recurring task and convert it to task format
+      const recurringTask = recurringTasks.find(rt => rt.id === wt.taskId);
+      if (recurringTask) {
+        // Check if the recurring task was completed today
+        const completedToday = recurringTask.lastCompleted ? isToday(parseISO(recurringTask.lastCompleted)) : false;
+
+        task = {
+          id: recurringTask.id,
+          userId: recurringTask.userId,
+          name: recurringTask.name,
+          category: recurringTask.category ?? 'personal',
+          energyLevel: recurringTask.energyLevel ?? 'Medium',
+          completed: completedToday,
+          completedAt: completedToday ? recurringTask.lastCompleted : null,
+          createdAt: recurringTask.createdAt,
+          projectId: recurringTask.projectId,
+          deadline: recurringTask.deadline,
+          collaboration: recurringTask.collaboration,
+          details: recurringTask.details,
+          priority: recurringTask.priority,
+          taskType: 'recurring' as const,
+        };
+      }
+    }
+
     return task ? { ...task, workdayTaskId: wt.id, workdayNotes: wt.notes } : null;
-  }).filter((t): t is Task & { workdayTaskId: string; workdayNotes: string | null } => t !== null);
+  }).filter((t): t is Task & { workdayTaskId: string; workdayNotes: string | null; taskType: 'regular' | 'recurring' } => t !== null);
 
-  const handleComplete = (id: string, completed: boolean) => {
-    let originalTasksState: Task[] = [];
+  const handleComplete = (id: string, completed: boolean, taskType: 'regular' | 'recurring') => {
+    if (taskType === 'regular') {
+      let originalTasksState: Task[] = [];
 
-    // Optimistically update the UI
-    setAllTasks(currentTasks => {
-        originalTasksState = currentTasks;
-        return currentTasks.map(task =>
-            task.id === id
-            ? { ...task, completed, completedAt: completed ? new Date().toISOString() : null }
-            : task
-        );
-    });
+      // Optimistically update the UI
+      setAllTasks(currentTasks => {
+          originalTasksState = currentTasks;
+          return currentTasks.map(task =>
+              task.id === id
+              ? { ...task, completed, completedAt: completed ? new Date().toISOString() : null }
+              : task
+          );
+      });
 
-    startTransition(async () => {
-        try {
-            await updateTask(firestore, userId, id, { completed, completedAt: completed ? new Date().toISOString() : null });
-            if (completed) {
-                await calculateAndSaveMomentumScore(firestore, userId);
-                await onTaskCompleted(userId);
-            } else {
-                await onClientWrite();
-            }
-        } catch(error) {
-            toast({
-                variant: 'destructive',
-                title: 'Uh oh! Something went wrong.',
-                description: 'There was a problem updating your task. Reverting changes.',
-            });
-            setAllTasks(originalTasksState);
-        }
-    });
+      startTransition(async () => {
+          try {
+              await updateTask(firestore, userId, id, { completed, completedAt: completed ? new Date().toISOString() : null });
+              if (completed) {
+                  await calculateAndSaveMomentumScore(firestore, userId);
+                  await onTaskCompleted(userId);
+              } else {
+                  await onClientWrite();
+              }
+          } catch(error) {
+              toast({
+                  variant: 'destructive',
+                  title: 'Uh oh! Something went wrong.',
+                  description: 'There was a problem updating your task. Reverting changes.',
+              });
+              setAllTasks(originalTasksState);
+          }
+      });
+    } else {
+      // Handle recurring tasks
+      let originalRecurringTasksState: typeof recurringTasks = [];
+
+      // Optimistically update the UI
+      setRecurringTasks(currentTasks => {
+          originalRecurringTasksState = currentTasks;
+          return currentTasks.map(task =>
+              task.id === id
+              ? { ...task, lastCompleted: completed ? new Date().toISOString() : null }
+              : task
+          );
+      });
+
+      startTransition(async () => {
+          try {
+              if (completed) {
+                  // Update lastCompleted to now
+                  await updateRecurringTask(firestore, userId, id, { lastCompleted: new Date().toISOString() });
+                  await calculateAndSaveMomentumScore(firestore, userId);
+                  await onTaskCompleted(userId);
+              } else {
+                  // Un-complete by setting lastCompleted to null
+                  await updateRecurringTask(firestore, userId, id, { lastCompleted: null });
+                  await onClientWrite();
+              }
+          } catch(error) {
+              toast({
+                  variant: 'destructive',
+                  title: 'Uh oh! Something went wrong.',
+                  description: 'There was a problem updating your recurring task. Reverting changes.',
+              });
+              setRecurringTasks(originalRecurringTasksState);
+          }
+      });
+    }
   };
 
   const handleRemoveFromWorkday = (workdayTaskId: string) => {
@@ -197,7 +266,7 @@ export function WorkdayTasksCard() {
                         <Checkbox
                           id={`task-${task.id}`}
                           checked={task.completed}
-                          onCheckedChange={(checked) => handleComplete(task.id, !!checked)}
+                          onCheckedChange={(checked) => handleComplete(task.id, !!checked, task.taskType)}
                           disabled={isPending}
                           className="mt-1"
                         />
@@ -283,7 +352,7 @@ export function WorkdayTasksCard() {
                         <Checkbox
                           id={`task-${task.id}`}
                           checked={true}
-                          onCheckedChange={(checked) => handleComplete(task.id, !!checked)}
+                          onCheckedChange={(checked) => handleComplete(task.id, !!checked, task.taskType)}
                           disabled={isPending}
                           className="mt-1"
                         />
