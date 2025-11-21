@@ -193,5 +193,20 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
         allow delete: if isExistingOwner(userId);
     }
+
+    /**
+     * @description Rules for the /users/{userId}/private collection.
+     * @path /users/{userId}/private/{docId}
+     * @purpose Stores sensitive user data like Google Calendar tokens
+     * @security Only accessible by the user owner, never publicly readable
+     * @note This is a special collection for storing OAuth tokens and other private credentials
+     */
+    match /users/{userId}/private/{docId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+    }
   }
 }

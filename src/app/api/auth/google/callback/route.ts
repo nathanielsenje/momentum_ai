@@ -7,9 +7,15 @@ import { doc, setDoc } from 'firebase/firestore';
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state'); // User ID passed through state
 
   if (typeof code !== 'string') {
     return NextResponse.json({ error: 'Invalid code' }, { status: 400 });
+  }
+
+  if (!state) {
+    console.error('Missing state parameter (userId)');
+    return NextResponse.redirect(new URL('/settings?status=error&message=missing_user', req.url));
   }
 
   try {
@@ -17,10 +23,7 @@ export async function GET(req: NextRequest) {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
-    // Here, you would typically get the currently logged-in user's ID
-    // For this example, we'll assume a hardcoded user ID.
-    // In a real app, you'd get this from a session or a decoded token.
-    const userId = 'dummy-user-id'; // Replace with actual user ID logic
+    const userId = state;
 
     // Save tokens to Firestore for the user
     const db = getDb();
@@ -29,6 +32,7 @@ export async function GET(req: NextRequest) {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
         expiryDate: tokens.expiry_date,
+        updatedAt: new Date().toISOString(),
     }, { merge: true });
 
 
